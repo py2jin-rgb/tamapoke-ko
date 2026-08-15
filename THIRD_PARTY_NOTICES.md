@@ -57,20 +57,31 @@ AXP2101 PMU 지원에 사용합니다. 라이브러리 자체의 라이선스는
 
 브라우저 기반 ESP32 펌웨어 설치 UI에 사용합니다. 해당 프로젝트의 라이선스와 이용조건은 원 출처를 따릅니다.
 
-## 8. Waveshare hardware
+## 8. Nanum Korean font — 한글 닉네임 폴백 비트맵
+
+- Font family used by CI: NanumBarunGothic / NanumGothic 계열 중 설치된 호환 글꼴
+- Provider / copyright notice: NAVER 관련 공식 나눔글꼴 배포 고지 참조
+- License: SIL Open Font License 1.1 (OFL 1.1)
+- Official license information: https://help.naver.com/service/11029/contents/18088?lang=ko&osType=PC
+
+천지인 통합 테스트판은 임의의 현대 한글 음절 닉네임을 표시하기 위해 GitHub Actions 빌드 시 나눔 한글 글꼴을 16x16 단색 비트맵 글리프로 래스터라이즈합니다. 이 저장소의 소스에는 원본 TTF/OTF 글꼴 파일을 포함하거나 별도 다운로드 파일로 재배포하지 않으며, 생성된 펌웨어에는 필요한 비트맵 데이터가 포함됩니다.
+
+글꼴 및 그 파생물의 이용에는 해당 OFL 1.1 조건이 적용되며, 이 고지는 TamaPoke 코드의 MIT License나 Pokémon 관련 권리와 별개입니다.
+
+## 9. Waveshare hardware
 
 - Hardware: Waveshare ESP32-S3-Touch-AMOLED-1.75
 - Documentation: https://www.waveshare.com/wiki/ESP32-S3-Touch-AMOLED-1.75
 
 Waveshare의 상표, 문서, 회로도 및 하드웨어 관련 자료는 해당 권리자 및 해당 자료의 조건을 따릅니다.
 
-## 9. 3D printed case
+## 10. 3D printed case
 
 원작 TamaPoke는 `yoyothechicken`의 "Pokeball" 모델을 기반으로 한 케이스 리믹스를 언급하며, 원작 저장소는 해당 케이스에 CC BY-NC-SA 조건이 적용된다고 고지합니다.
 
 현재 이 저장소의 GitHub Pages 펌웨어 설치 페이지는 해당 3D 모델 파일을 배포하지 않습니다. 3D 모델을 이용하는 경우 원 출처와 라이선스를 별도로 확인해야 합니다.
 
-## 10. No license stacking / 권리 구분
+## 11. No license stacking / 권리 구분
 
 한 항목의 오픈소스 라이선스가 다른 항목의 권리까지 허가하는 것은 아닙니다.
 
@@ -78,6 +89,7 @@ Waveshare의 상표, 문서, 회로도 및 하드웨어 관련 자료는 해당 
 
 - TamaPoke 코드의 MIT License ≠ Pokémon 캐릭터/명칭 사용 허가
 - SpriteCollab의 CC 조건 ≠ Pokémon IP 자체에 대한 별도 권리 허가
+- 나눔글꼴 OFL ≠ TamaPoke 또는 Pokémon 관련 자산의 이용 허가
 - 이 저장소의 한국어 수정 코드 라이선스 ≠ 제3자 자산의 재배포 허가
 
 각 권리는 독립적으로 확인해야 합니다.
