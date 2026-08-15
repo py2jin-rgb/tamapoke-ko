@@ -47,10 +47,11 @@ jobs:
 
       - name: Prepare alarm test source
         run: |
-          cp -a source/TamaPoke source_alarm
+          mkdir -p source_alarm
+          cp -a source/TamaPoke source_alarm/TamaPoke
           cat alarm_test/patch_01.b64 alarm_test/patch_02.b64 alarm_test/patch_03.b64 alarm_test/patch_04.b64 \
             | tr -d '\r\n' | base64 -d | gzip -dc > /tmp/alarm_test.patch
-          cd source_alarm
+          cd source_alarm/TamaPoke
           patch -p1 < /tmp/alarm_test.patch
           test -f alarm.cpp
           test -f alarm.h
@@ -96,8 +97,8 @@ jobs:
           arduino-cli compile \
             --fqbn "esp32:esp32:esp32s3:CDCOnBoot=cdc,FlashSize=16M,PSRAM=opi,PartitionScheme=app3M_fat9M_16MB" \
             --build-path build_alarm \
-            source_alarm
-          test -f build_alarm/source_alarm.ino.bin
+            source_alarm/TamaPoke
+          test -f build_alarm/TamaPoke.ino.bin
 
       - name: Prepare two web installers
         run: |
@@ -121,7 +122,7 @@ jobs:
           }
           EOF
 
-          ALARM=build_alarm/source_alarm.ino.bin
+          ALARM=build_alarm/TamaPoke.ino.bin
           ASHA=$(sha256sum "$ALARM" | awk '{print $1}')
           ASHORT=${ASHA:0:12}
           AFW=tamapoke-ko-alarm-test-${ASHORT}.bin
