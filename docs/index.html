@@ -17,9 +17,10 @@ body{margin:0;background:#10141c;color:#f5f7fb;font-family:system-ui,-apple-syst
 <p class="ok">✓ 한글+숫자/영문 혼합 문자열 깨짐 수정</p>
 <p class="ok">✓ 하단 버튼 및 공놀이 터치 보정</p>
 <p class="ok">✓ 공놀이 최고기록 한글 표시 수정</p>
+<p class="ok">✓ 훈련 결과 최고기록 한글 표시 수정</p>
 <div class="warn"><b>중요:</b> 기존 포켓몬을 유지하려면 전체 Erase/초기화를 선택하지 마세요. 이 설치기는 앱 영역 <code>0x10000</code>만 업데이트합니다.</div>
 <div class="install">
-<esp-web-install-button id="installer" manifest="manifest.json">
+<esp-web-install-button id="installer" manifest="manifest.json?v=stable-textfix2">
 <button slot="activate">⚡ 안정판 설치</button>
 <span slot="unsupported">PC용 Chrome 또는 Edge가 필요합니다.</span>
 <span slot="not-allowed">HTTPS 페이지에서 실행하세요.</span>
@@ -37,9 +38,12 @@ body{margin:0;background:#10141c;color:#f5f7fb;font-family:system-ui,-apple-syst
 <div class="card"><h2>처음 조립한 새 기기</h2><p>이 페이지는 기존 TamaPoke 앱 업데이트용입니다. 완전 새 보드는 먼저 원작 TamaPoke의 부트로더/파티션과 microSD 스프라이트를 설치한 뒤 사용하세요.</p></div>
 
 <div class="card testcard">
-<span class="testtag">🧪 TEST / 실험판</span>
+<span class="testtag">🧪 TEST / 실험판 · ALARM v1.1</span>
 <h2>⏰ 알람 기능 테스트판</h2>
 <p>안정판과 별도로 빌드되는 알람 시험용 펌웨어입니다. 안정판 버튼과 파일이 완전히 분리되어 있어 알람판만 선택해서 시험할 수 있습니다.</p>
+<p class="ok">✓ 안정판의 공놀이/훈련 최고기록 한글 보정 포함</p>
+<p class="ok">✓ 대기화면 날짜 숫자 + 한글 요일 분리 렌더링</p>
+<p class="ok">✓ 배터리 아이콘/퍼센트 원형 화면 안쪽으로 위치 보정</p>
 <p class="ok">✓ 30초 미사용 시 시계 대기화면</p>
 <p class="ok">✓ 알람 ON/OFF 및 시·분 설정</p>
 <p class="ok">✓ 알람 울림 → 정지 / 5분 스누즈</p>
@@ -47,8 +51,8 @@ body{margin:0;background:#10141c;color:#f5f7fb;font-family:system-ui,-apple-syst
 <p class="ok">✓ 알람 설정값 NVS 저장</p>
 <div class="testwarn"><b>테스트판 주의:</b> GitHub에서 컴파일 검증 후 공개하지만 실제 기기 동작은 실기 테스트 중입니다. <b>Erase/초기화는 선택하지 마세요.</b><br><br>또한 PWR 짧게 눌러 화면만 끈 상태에서는 펌웨어가 계속 실행되어 알람이 동작하도록 설계했습니다. 완전히 전원을 차단한 상태에서는 알람 설정값은 유지되지만, ESP32가 꺼져 있으므로 알람이 울리는 기능은 보장하지 않습니다.</div>
 <div class="install testinstall">
-<esp-web-install-button id="alarm-installer" manifest="manifest-alarm.json">
-<button slot="activate">🧪 알람 테스트판 설치</button>
+<esp-web-install-button id="alarm-installer" manifest="manifest-alarm.json?v=alarm11">
+<button slot="activate">🧪 알람 v1.1 테스트판 설치</button>
 <span slot="unsupported">PC용 Chrome 또는 Edge가 필요합니다.</span>
 <span slot="not-allowed">HTTPS 페이지에서 실행하세요.</span>
 </esp-web-install-button>
