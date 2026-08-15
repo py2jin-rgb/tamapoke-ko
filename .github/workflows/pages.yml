@@ -66,7 +66,10 @@ jobs:
           test -f alarm.h
           test -f alarm_font.h
           grep -q '1.5-ko-alarm1.0' TamaPoke.ino
-          echo 'alarm test patch applied'
+          cd ../..
+          python3 alarm_test/ui_fix_v11.py
+          grep -q '1.5-ko-alarm1.1' source_alarm/TamaPoke/TamaPoke.ino
+          echo 'alarm test v1.1 patch applied'
 
       - name: Install Arduino CLI
         uses: arduino/setup-arduino-cli@v2
@@ -134,18 +137,18 @@ jobs:
           ALARM=build_alarm/TamaPoke.ino.bin
           ASHA=$(sha256sum "$ALARM" | awk '{print $1}')
           ASHORT=${ASHA:0:12}
-          AFW=tamapoke-ko-alarm-test-${ASHORT}.bin
+          AFW=tamapoke-ko-alarm-test-v11-${ASHORT}.bin
           cp "$ALARM" "site/firmware/$AFW"
           cat > site/manifest-alarm.json <<EOF
           {
             "name": "TamaPoke KO Alarm Test",
-            "version": "1.5-ko-alarm1.0-test-${ASHORT}",
+            "version": "1.5-ko-alarm1.1-test-${ASHORT}",
             "new_install_prompt_erase": true,
             "builds": [{"chipFamily":"ESP32-S3","parts":[{"path":"firmware/$AFW","offset":65536}]}]
           }
           EOF
 
-          printf 'Stable SHA256: %s\nAlarm-test SHA256: %s\nFlash offset: 0x10000\nStable fixes: ball-game best score + training best score Korean rendering\n' "$SSHA" "$ASHA" > site/build-info.txt
+          printf 'Stable SHA256: %s\nAlarm-test SHA256: %s\nFlash offset: 0x10000\nStable fixes: ball-game best score + training best score Korean rendering\nAlarm v1.1 fixes: inherits stable text fixes + battery moved inside circle + date/weekday split rendering\n' "$SSHA" "$ASHA" > site/build-info.txt
 
       - name: Configure Pages
         uses: actions/configure-pages@v5
