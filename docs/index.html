@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#10141c">
 <title>TamaPoke KO · 온라인 설치</title>
 <style>
-body{margin:0;background:#10141c;color:#f5f7fb;font-family:system-ui,-apple-system,"Malgun Gothic",sans-serif}.wrap{max-width:680px;margin:auto;padding:40px 18px}.card{background:#1a202b;border:1px solid #30394a;border-radius:18px;padding:22px;margin:18px 0}h1{font-size:30px;margin:0 0 8px}.sub,.small{color:#aeb7c7}.ok{color:#69db91}.warn{background:#302814;border:1px solid #806d30;border-radius:12px;padding:14px;color:#ffe59a}.install{text-align:center;padding:22px 0}button{border:0;border-radius:13px;padding:15px 25px;background:#69db91;color:#07120b;font-size:18px;font-weight:800;cursor:pointer}.step{margin:10px 0}code{background:#0b0e13;padding:2px 6px;border-radius:5px}a{color:#73cfff;text-decoration:none}a:hover{text-decoration:underline}.links{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}.linkbtn{display:inline-block;border:1px solid #3a465b;background:#222a38;border-radius:10px;padding:10px 13px;font-weight:700}footer{margin-top:28px;color:#8f99aa;font-size:12px}</style>
+body{margin:0;background:#10141c;color:#f5f7fb;font-family:system-ui,-apple-system,"Malgun Gothic",sans-serif}.wrap{max-width:680px;margin:auto;padding:40px 18px}.card{background:#1a202b;border:1px solid #30394a;border-radius:18px;padding:22px;margin:18px 0}h1{font-size:30px;margin:0 0 8px}.sub,.small{color:#aeb7c7}.ok{color:#69db91}.warn{background:#302814;border:1px solid #806d30;border-radius:12px;padding:14px;color:#ffe59a}.testcard{border-color:#806d30;background:#211e18}.testtag{display:inline-block;background:#5b4a16;color:#ffe07a;border:1px solid #8c7425;border-radius:999px;padding:4px 10px;font-size:12px;font-weight:800}.testwarn{background:#302814;border:1px solid #806d30;border-radius:12px;padding:14px;color:#ffe59a}.install{text-align:center;padding:22px 0}button{border:0;border-radius:13px;padding:15px 25px;background:#69db91;color:#07120b;font-size:18px;font-weight:800;cursor:pointer}.testinstall button{background:#ffd75e;color:#261d00}.step{margin:10px 0}code{background:#0b0e13;padding:2px 6px;border-radius:5px}a{color:#73cfff;text-decoration:none}a:hover{text-decoration:underline}.links{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}.linkbtn{display:inline-block;border:1px solid #3a465b;background:#222a38;border-radius:10px;padding:10px 13px;font-weight:700}footer{margin-top:28px;color:#8f99aa;font-size:12px}</style>
 </head>
 <body><div class="wrap">
 <h1>🔴 TamaPoke 한국어판</h1>
@@ -16,10 +16,11 @@ body{margin:0;background:#10141c;color:#f5f7fb;font-family:system-ui,-apple-syst
 <p class="ok">✓ 한글 14/18/22px UI 폰트</p>
 <p class="ok">✓ 한글+숫자/영문 혼합 문자열 깨짐 수정</p>
 <p class="ok">✓ 하단 버튼 및 공놀이 터치 보정</p>
+<p class="ok">✓ 공놀이 최고기록 한글 표시 수정</p>
 <div class="warn"><b>중요:</b> 기존 포켓몬을 유지하려면 전체 Erase/초기화를 선택하지 마세요. 이 설치기는 앱 영역 <code>0x10000</code>만 업데이트합니다.</div>
 <div class="install">
 <esp-web-install-button id="installer" manifest="manifest.json">
-<button slot="activate">⚡ 다마포켓에 설치</button>
+<button slot="activate">⚡ 안정판 설치</button>
 <span slot="unsupported">PC용 Chrome 또는 Edge가 필요합니다.</span>
 <span slot="not-allowed">HTTPS 페이지에서 실행하세요.</span>
 </esp-web-install-button>
@@ -28,12 +29,33 @@ body{margin:0;background:#10141c;color:#f5f7fb;font-family:system-ui,-apple-syst
 </div>
 <div class="card"><h2>설치 순서</h2>
 <div class="step">1. 다마포켓을 USB 데이터 케이블로 PC에 연결</div>
-<div class="step">2. 위의 <b>다마포켓에 설치</b> 클릭</div>
+<div class="step">2. 위의 <b>안정판 설치</b> 클릭</div>
 <div class="step">3. ESP32-S3 USB 포트 선택</div>
 <div class="step">4. Erase/초기화 질문이 나오면 기존 데이터 유지 선택</div>
 <div class="step">5. 설치 완료 후 재부팅되면 끝</div>
 </div>
 <div class="card"><h2>처음 조립한 새 기기</h2><p>이 페이지는 기존 TamaPoke 앱 업데이트용입니다. 완전 새 보드는 먼저 원작 TamaPoke의 부트로더/파티션과 microSD 스프라이트를 설치한 뒤 사용하세요.</p></div>
+
+<div class="card testcard">
+<span class="testtag">🧪 TEST / 실험판</span>
+<h2>⏰ 알람 기능 테스트판</h2>
+<p>안정판과 별도로 빌드되는 알람 시험용 펌웨어입니다. 안정판 버튼과 파일이 완전히 분리되어 있어 알람판만 선택해서 시험할 수 있습니다.</p>
+<p class="ok">✓ 30초 미사용 시 시계 대기화면</p>
+<p class="ok">✓ 알람 ON/OFF 및 시·분 설정</p>
+<p class="ok">✓ 알람 울림 → 정지 / 5분 스누즈</p>
+<p class="ok">✓ PWR 짧게 눌러 울리는 알람 정지</p>
+<p class="ok">✓ 알람 설정값 NVS 저장</p>
+<div class="testwarn"><b>테스트판 주의:</b> GitHub에서 컴파일 검증 후 공개하지만 실제 기기 동작은 실기 테스트 중입니다. <b>Erase/초기화는 선택하지 마세요.</b><br><br>또한 PWR 짧게 눌러 화면만 끈 상태에서는 펌웨어가 계속 실행되어 알람이 동작하도록 설계했습니다. 완전히 전원을 차단한 상태에서는 알람 설정값은 유지되지만, ESP32가 꺼져 있으므로 알람이 울리는 기능은 보장하지 않습니다.</div>
+<div class="install testinstall">
+<esp-web-install-button id="alarm-installer" manifest="manifest-alarm.json">
+<button slot="activate">🧪 알람 테스트판 설치</button>
+<span slot="unsupported">PC용 Chrome 또는 Edge가 필요합니다.</span>
+<span slot="not-allowed">HTTPS 페이지에서 실행하세요.</span>
+</esp-web-install-button>
+</div>
+<p class="small">테스트 후 문제가 있으면 사진과 함께 알려주세요. 안정판은 위 버튼으로 언제든 다시 설치할 수 있습니다.</p>
+</div>
+
 <div class="card">
 <h2>🙏 원작자 / Original Project</h2>
 <p>이 한국어판은 <b>socquique</b>의 오픈소스 프로젝트 <b>TamaPoke</b>를 기반으로 제작했습니다. 멋진 원작을 공개해주신 원작자에게 감사드립니다.</p>
