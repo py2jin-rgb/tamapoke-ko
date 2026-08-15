@@ -22,6 +22,24 @@ SOFTWARE.
 
 ---
 
+UPSTREAM NOTE — preserved from socquique/TamaPoke
+==================================================
+
+This MIT license covers ONLY the original source code of the upstream TamaPoke
+repository (firmware and tooling). It does NOT cover:
+
+  * Pokémon sprites and names — © Nintendo / Game Freak / The Pokémon Company.
+    Pixel art from PMD SpriteCollab (CC BY-NC 4.0).
+    Included by the upstream project for personal, NON-COMMERCIAL use only.
+
+  * The upstream 3D-printed case — a remix of "Pokeball" by yoyothechicken,
+    licensed CC BY-NC-SA and shared by the upstream project under those terms.
+
+See the upstream README and CREDITS.md for details:
+https://github.com/socquique/TamaPoke
+
+---
+
 Additional notice for TamaPoke KO
 =================================
 
