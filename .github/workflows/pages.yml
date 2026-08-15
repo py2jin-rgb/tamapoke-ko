@@ -32,28 +32,22 @@ jobs:
         run: |
           python3 - <<'PY'
           from pathlib import Path
+          import re
+
           p = Path('source/TamaPoke/TamaPoke.ino')
           s = p.read_text(encoding='utf-8')
 
-          old1 = '''      gfx->setTextColor(ink);
-          gfx->setCursor(CX - strlen(rec) * 6, 214);
-          gfx->print(rec);'''
-          new1 = '''      uiPrintCenter(rec, 214, ink, 2);'''
+          pat1 = r'gfx->setTextColor\(ink\);\s*gfx->setCursor\(CX - strlen\(rec\) \* 6, 214\);\s*gfx->print\(rec\);'
+          pat2 = r'gfx->setTextSize\(2\);\s*gfx->setCursor\(CX - strlen\(rec\) \* 6, 76\);\s*gfx->print\(rec\);'
 
-          old2 = '''  gfx->setTextSize(2);
-          gfx->setCursor(CX - strlen(rec) * 6, 76);
-          gfx->print(rec);'''
-          new2 = '''  uiPrintCenter(rec, 76, ink, 2);'''
+          s, n1 = re.subn(pat1, 'uiPrintCenter(rec, 214, ink, 2);', s, count=1)
+          s, n2 = re.subn(pat2, 'uiPrintCenter(rec, 76, ink, 2);', s, count=1)
 
-          if old1 not in s:
-              raise SystemExit('game-over best-score renderer pattern not found')
-          if old2 not in s:
-              raise SystemExit('live best-score renderer pattern not found')
+          if n1 != 1 or n2 != 1:
+              raise SystemExit(f'best-score patch count mismatch: gameover={n1}, live={n2}')
 
-          s = s.replace(old1, new1, 1)
-          s = s.replace(old2, new2, 1)
           p.write_text(s, encoding='utf-8')
-          print('Korean best-score renderer patched: 2 locations')
+          print('Korean best-score renderer patched: gameover=1 live=1')
           PY
 
       - name: Install Arduino CLI
