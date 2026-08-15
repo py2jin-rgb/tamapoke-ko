@@ -23,7 +23,7 @@ jobs:
 
       - name: Extract validated CLEAN v1.2 source
         run: |
-          rm -rf source
+          rm -rf source source_alarm
           mkdir -p source
           unzip -q source_package.zip -d source
           test -f source/TamaPoke/TamaPoke.ino
@@ -33,22 +33,30 @@ jobs:
           python3 - <<'PY'
           from pathlib import Path
           import re
-
           p = Path('source/TamaPoke/TamaPoke.ino')
           s = p.read_text(encoding='utf-8')
-
           pat1 = r'gfx->setTextColor\(ink\);\s*gfx->setCursor\(CX - strlen\(rec\) \* 6, 214\);\s*gfx->print\(rec\);'
           pat2 = r'gfx->setTextSize\(2\);\s*gfx->setCursor\(CX - strlen\(rec\) \* 6, 76\);\s*gfx->print\(rec\);'
-
           s, n1 = re.subn(pat1, 'uiPrintCenter(rec, 214, ink, 2);', s, count=1)
           s, n2 = re.subn(pat2, 'uiPrintCenter(rec, 76, ink, 2);', s, count=1)
-
           if n1 != 1 or n2 != 1:
               raise SystemExit(f'best-score patch count mismatch: gameover={n1}, live={n2}')
-
           p.write_text(s, encoding='utf-8')
-          print('Korean best-score renderer patched: gameover=1 live=1')
+          print('stable Korean best-score renderer patched')
           PY
+
+      - name: Prepare alarm test source
+        run: |
+          cp -a source/TamaPoke source_alarm
+          cat alarm_test/patch_01.b64 alarm_test/patch_02.b64 alarm_test/patch_03.b64 alarm_test/patch_04.b64 \
+            | tr -d '\r\n' | base64 -d | gzip -dc > /tmp/alarm_test.patch
+          cd source_alarm
+          patch -p1 < /tmp/alarm_test.patch
+          test -f alarm.cpp
+          test -f alarm.h
+          test -f alarm_font.h
+          grep -q '1.5-ko-alarm1.0' TamaPoke.ino
+          echo 'alarm test patch applied'
 
       - name: Install Arduino CLI
         uses: arduino/setup-arduino-cli@v2
@@ -71,43 +79,63 @@ jobs:
           arduino-cli lib install "SensorLib@0.3.1"
           arduino-cli lib install "XPowersLib@0.2.6"
 
-      - name: Compile TamaPoke KO CLEAN v1.2 game text fix
+      - name: Compile stable firmware
         run: |
-          rm -rf build
-          mkdir build
+          rm -rf build_stable
+          mkdir build_stable
           arduino-cli compile \
             --fqbn "esp32:esp32:esp32s3:CDCOnBoot=cdc,FlashSize=16M,PSRAM=opi,PartitionScheme=app3M_fat9M_16MB" \
-            --build-path build \
+            --build-path build_stable \
             source/TamaPoke
-          test -f build/TamaPoke.ino.bin
+          test -f build_stable/TamaPoke.ino.bin
 
-      - name: Prepare web installer
+      - name: Compile alarm test firmware
+        run: |
+          rm -rf build_alarm
+          mkdir build_alarm
+          arduino-cli compile \
+            --fqbn "esp32:esp32:esp32s3:CDCOnBoot=cdc,FlashSize=16M,PSRAM=opi,PartitionScheme=app3M_fat9M_16MB" \
+            --build-path build_alarm \
+            source_alarm
+          test -f build_alarm/source_alarm.ino.bin
+
+      - name: Prepare two web installers
         run: |
           set -e
+          rm -rf site
           mkdir -p site/firmware
           cp docs/index.html site/index.html
           touch site/.nojekyll
-          APP=build/TamaPoke.ino.bin
-          SHA=$(sha256sum "$APP" | awk '{print $1}')
-          SHORT=${SHA:0:12}
-          FW=tamapoke-ko-clean1.2-gamefontfix-${SHORT}.bin
-          cp "$APP" "site/firmware/$FW"
+
+          STABLE=build_stable/TamaPoke.ino.bin
+          SSHA=$(sha256sum "$STABLE" | awk '{print $1}')
+          SSHORT=${SSHA:0:12}
+          SFW=tamapoke-ko-stable-${SSHORT}.bin
+          cp "$STABLE" "site/firmware/$SFW"
           cat > site/manifest.json <<EOF
           {
-            "name": "TamaPoke KO CLEAN",
-            "version": "1.4-ko-clean1.2-gamefontfix-${SHORT}",
+            "name": "TamaPoke KO Stable",
+            "version": "1.4-ko-clean1.2-gamefontfix-${SSHORT}",
             "new_install_prompt_erase": true,
-            "builds": [
-              {
-                "chipFamily": "ESP32-S3",
-                "parts": [
-                  { "path": "firmware/$FW", "offset": 65536 }
-                ]
-              }
-            ]
+            "builds": [{"chipFamily":"ESP32-S3","parts":[{"path":"firmware/$SFW","offset":65536}]}]
           }
           EOF
-          printf 'Firmware SHA256: %s\nFlash offset: 0x10000\nFix: Korean BEST score renderer\n' "$SHA" > site/build-info.txt
+
+          ALARM=build_alarm/source_alarm.ino.bin
+          ASHA=$(sha256sum "$ALARM" | awk '{print $1}')
+          ASHORT=${ASHA:0:12}
+          AFW=tamapoke-ko-alarm-test-${ASHORT}.bin
+          cp "$ALARM" "site/firmware/$AFW"
+          cat > site/manifest-alarm.json <<EOF
+          {
+            "name": "TamaPoke KO Alarm Test",
+            "version": "1.5-ko-alarm1.0-test-${ASHORT}",
+            "new_install_prompt_erase": true,
+            "builds": [{"chipFamily":"ESP32-S3","parts":[{"path":"firmware/$AFW","offset":65536}]}]
+          }
+          EOF
+
+          printf 'Stable SHA256: %s\nAlarm-test SHA256: %s\nFlash offset: 0x10000\n' "$SSHA" "$ASHA" > site/build-info.txt
 
       - name: Configure Pages
         uses: actions/configure-pages@v5
