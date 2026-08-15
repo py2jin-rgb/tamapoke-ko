@@ -28,21 +28,30 @@ jobs:
           unzip -q source_package.zip -d source
           test -f source/TamaPoke/TamaPoke.ino
 
-      - name: Patch Korean best-score renderer
+      - name: Patch Korean stable text renderers
         run: |
           python3 - <<'PY'
           from pathlib import Path
           import re
           p = Path('source/TamaPoke/TamaPoke.ino')
           s = p.read_text(encoding='utf-8')
+
+          # Ball game: game-over best score
           pat1 = r'gfx->setTextColor\(ink\);\s*gfx->setCursor\(CX - strlen\(rec\) \* 6, 214\);\s*gfx->print\(rec\);'
+          # Ball game: live best score
           pat2 = r'gfx->setTextSize\(2\);\s*gfx->setCursor\(CX - strlen\(rec\) \* 6, 76\);\s*gfx->print\(rec\);'
+          # Strength training: result best score (non-new-record branch)
+          pat3 = r'gfx->setTextColor\(ink\);\s*gfx->setCursor\(CX - strlen\(r\) \* 6, 256\);\s*gfx->print\(r\);'
+
           s, n1 = re.subn(pat1, 'uiPrintCenter(rec, 214, ink, 2);', s, count=1)
           s, n2 = re.subn(pat2, 'uiPrintCenter(rec, 76, ink, 2);', s, count=1)
-          if n1 != 1 or n2 != 1:
-              raise SystemExit(f'best-score patch count mismatch: gameover={n1}, live={n2}')
+          s, n3 = re.subn(pat3, 'uiPrintCenter(r, 256, ink, 2);', s, count=1)
+
+          if n1 != 1 or n2 != 1 or n3 != 1:
+              raise SystemExit(f'Korean renderer patch count mismatch: gameover={n1}, live={n2}, training={n3}')
+
           p.write_text(s, encoding='utf-8')
-          print('stable Korean best-score renderer patched')
+          print('stable Korean renderers patched: ball game 2 + training 1')
           PY
 
       - name: Prepare alarm test source
@@ -111,12 +120,12 @@ jobs:
           STABLE=build_stable/TamaPoke.ino.bin
           SSHA=$(sha256sum "$STABLE" | awk '{print $1}')
           SSHORT=${SSHA:0:12}
-          SFW=tamapoke-ko-stable-${SSHORT}.bin
+          SFW=tamapoke-ko-stable-textfix2-${SSHORT}.bin
           cp "$STABLE" "site/firmware/$SFW"
           cat > site/manifest.json <<EOF
           {
             "name": "TamaPoke KO Stable",
-            "version": "1.4-ko-clean1.2-gamefontfix-${SSHORT}",
+            "version": "1.4-ko-clean1.2-textfix2-${SSHORT}",
             "new_install_prompt_erase": true,
             "builds": [{"chipFamily":"ESP32-S3","parts":[{"path":"firmware/$SFW","offset":65536}]}]
           }
@@ -136,7 +145,7 @@ jobs:
           }
           EOF
 
-          printf 'Stable SHA256: %s\nAlarm-test SHA256: %s\nFlash offset: 0x10000\n' "$SSHA" "$ASHA" > site/build-info.txt
+          printf 'Stable SHA256: %s\nAlarm-test SHA256: %s\nFlash offset: 0x10000\nStable fixes: ball-game best score + training best score Korean rendering\n' "$SSHA" "$ASHA" > site/build-info.txt
 
       - name: Configure Pages
         uses: actions/configure-pages@v5
