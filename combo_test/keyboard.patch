@@ -1,1 +1,296 @@
-PLACEHOLDER
+--- a/TamaPoke.ino
++++ b/TamaPoke.ino
+@@ -26,10 +26,12 @@
+ #include "ko_names.h"
+ #include "ko_font.h"
+ #include "alarm_font.h"
++#include "hangul_full16.h"
++#include "hangul_cheonjiin.h"
+ 
+ // Version del firmware. Subir este numero en cada release (y manifest.json para
+ // el instalador web). Se muestra en la pantalla de ajustes y por serie al arrancar.
+-#define FW_VERSION "1.5-ko-alarm1.1"
++#define FW_VERSION "1.6-ko-combo1.0"
+ 
+ #define CX 233  // centro de la pantalla redonda
+ #define CY 233
+@@ -88,6 +90,49 @@
+   return nullptr;
+ }
+ 
++
++// Complete modern-Hangul fallback used only when a syllable/Jamo is not in
++// the compact UI font tables. The 16x16 bitmap is scaled to the same visual
++// cell sizes as CLEAN v1.2 (14/18/22 UI sizes), allowing arbitrary nicknames.
++static const uint16_t *hangul16Rows(uint32_t cp) {
++  if (cp >= HANGUL16_FIRST && cp < HANGUL16_FIRST + HANGUL16_COUNT) {
++    return &HANGUL16_SYLLABLES[(cp - HANGUL16_FIRST) * 16u];
++  }
++  for (uint16_t i=0; i<HANGUL16_EXTRA_COUNT; i++) {
++    if (HANGUL16_EXTRA[i].cp == cp) return HANGUL16_EXTRA[i].row;
++  }
++  return nullptr;
++}
++static void hangul16Metrics(uint8_t requested, uint8_t &w, uint8_t &h, uint8_t &adv) {
++  if (requested <= 1) { w=15; h=19; adv=14; }
++  else if (requested == 2) { w=19; h=24; adv=18; }
++  else { w=22; h=28; adv=21; }
++}
++static bool hangul16Supported(uint32_t cp) { return hangul16Rows(cp) != nullptr; }
++static void hangul16DrawGlyph(uint32_t cp, int x, int y, uint16_t color, uint8_t requested) {
++  const uint16_t *src=hangul16Rows(cp); if(!src) return;
++  uint8_t tw,th,adv; hangul16Metrics(requested,tw,th,adv);
++  for(uint8_t yy=0; yy<th; yy++) {
++    uint8_t sy=(uint8_t)((uint16_t)yy*16u/th);
++    uint16_t bits=src[sy];
++    int xx=0;
++    while(xx<tw) {
++      while(xx<tw) {
++        uint8_t sx=(uint8_t)((uint16_t)xx*16u/tw);
++        if(bits & (1u << (15-sx))) break;
++        xx++;
++      }
++      int st=xx;
++      while(xx<tw) {
++        uint8_t sx=(uint8_t)((uint16_t)xx*16u/tw);
++        if(!(bits & (1u << (15-sx)))) break;
++        xx++;
++      }
++      if(xx>st) gfx->fillRect(x+st,y+yy,xx-st,1,color);
++    }
++  }
++}
++
+ static int koWidth(const char *s, uint8_t requested) {
+   KoFontRef f=koFontFor(requested); int w=0; const char *p=s;
+   while (*p) {
+@@ -97,7 +142,11 @@
+       const uint32_t *er=nullptr; uint8_t eh=0;
+       g=koFindAlarm(requested,cp,er,eh);
+     }
+-    if (!g) g=koFind(f,'?');
++    if (g) { w+=g->adv; continue; }
++    if (hangul16Supported(cp)) {
++      uint8_t fw,fh,fa; hangul16Metrics(requested,fw,fh,fa); w+=fa; continue;
++    }
++    g=koFind(f,'?');
+     if (g) w+=g->adv;
+   }
+   return w;
+@@ -109,6 +158,10 @@
+     const KoGlyph *g=koFind(f,cp);
+     const uint32_t *rows=f.rows; uint8_t gh=f.h;
+     if (!g) g=koFindAlarm(requested,cp,rows,gh);
++    if (!g && hangul16Supported(cp)) {
++      uint8_t fw,fh,fa; hangul16Metrics(requested,fw,fh,fa);
++      hangul16DrawGlyph(cp,pen,y,color,requested); pen+=fa; continue;
++    }
+     if (!g) { g=koFind(f,'?'); rows=f.rows; gh=f.h; }
+     if (!g) continue;
+     for (uint8_t yy=0; yy<gh; yy++) {
+@@ -171,8 +224,10 @@
+ bool screenOff = false;       // pulsacion corta del boton PWR
+ bool cardOpen = false;        // ficha del bicho (deslizar vertical)
+ bool kbOpen = false;          // teclado para renombrar al bicho
+-char nameBuf[12] = "";
++char nameBuf[40] = "";
+ uint8_t nameLen = 0;
++HangulComposer kbIme;
++bool kbHangulMode = true;
+ uint8_t cardPage = 0;         // 0 perfil, 1 stats+medallas
+ bool clockOpen = false;       // ajustes de reloj/alarma (deslizar abajo)
+ int clockH = 12, clockM = 0;  // hora en edicion
+@@ -1920,65 +1975,141 @@
+ }
+ 
+ // ---------- teclado para renombrar ----------
++// Combined test build: Korean UI opens a compact 3-column Cheonjiin keyboard.
++// Latin mode remains available with the ABC/한글 toggle.
+ 
+-static const char KB_KEYS[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ.-";  // 28 + DEL + OK = 30
++static const char KB_LATIN[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ."; // 27 chars
+ #define KB_COLS 6
+ #define KB_X 40
+ #define KB_Y 150
+ #define KB_W 64
+ #define KB_H 52
+ 
++#define KKO_X 74
++#define KKO_Y 136
++#define KKO_W 106
++#define KKO_H 58
++
++static void kbSyncLen() { nameLen=(uint8_t)strlen(nameBuf); }
++
++static void drawKeyBox(int x,int y,int w,int h,const char *lab,bool warn=false,uint8_t ts=1) {
++  gfx->fillRoundRect(x,y,w,h,8,warn?UI_BAR_WARN:UI_WHITE);
++  gfx->drawRoundRect(x,y,w,h,8,UI_INK);
++  if(lab && *lab) uiPrintAt(lab,x+(w-uiTextWidth(lab,ts))/2,y+(h-(ts<=1?19:24))/2,UI_INK,ts);
++}
++
+ void openKeyboard() {
+   kbOpen = true;
+   strncpy(nameBuf, pet.nick, sizeof(nameBuf) - 1);
+   nameBuf[sizeof(nameBuf) - 1] = 0;
+-  nameLen = strlen(nameBuf);
++  kbSyncLen();
++  kbIme.resetCompose();
++  kbHangulMode = (gLang == LANG_KO);
++}
++
++static void renderNameBuffer() {
++  char pv[64]; kbIme.preview(nameBuf,pv,sizeof(pv));
++  const char *show = pv[0] ? pv : "_";
++  gfx->fillRoundRect(83, 82, 300, 43, 8, UI_WHITE);
++  gfx->drawRoundRect(83, 82, 300, 43, 8, UI_INK);
++  uint8_t ts = uiTextWidth(show,2) <= 274 ? 2 : 1;
++  uiPrintAt(show, CX-uiTextWidth(show,ts)/2, ts==2?91:94, UI_INK, ts);
++}
++
++static void renderKeyboardHangul() {
++  static const char *row0[3]={"ㅣ","ㆍ","ㅡ"};
++  static const char *row1[3]={"ㄱㅋ","ㄴㄹ","ㄷㅌ"};
++  static const char *row2[3]={"ㅂㅍ","ㅅㅎ","ㅈㅊ"};
++  static const char *row3[3]={"ㅇㅁ","쌍","<-"};
++  const char **rows[4]={row0,row1,row2,row3};
++  for(int r=0;r<4;r++) for(int c=0;c<3;c++) {
++    int x=KKO_X+c*KKO_W, y=KKO_Y+r*KKO_H;
++    bool warn=(r==3 && c>=1);
++    drawKeyBox(x,y,KKO_W-8,KKO_H-7,rows[r][c],warn,(r==0)?2:1);
++  }
++  drawKeyBox(92,374,128,48,"ABC",false,2);
++  drawKeyBox(246,374,128,48,"확인",true,2);
++  uiPrintCenter("천지인", 430, UI_TRACK, 1);
++}
++
++static void renderKeyboardLatin() {
++  for (int i=0;i<30;i++) {
++    int x=KB_X+(i%KB_COLS)*KB_W, y=KB_Y+(i/KB_COLS)*KB_H;
++    bool warn=(i>=27);
++    gfx->fillRoundRect(x,y,KB_W-6,KB_H-6,6,warn?UI_BAR_WARN:UI_WHITE);
++    gfx->drawRoundRect(x,y,KB_W-6,KB_H-6,6,UI_INK);
++    if(i<27) {
++      char t[2]={KB_LATIN[i],0};
++      gfx->setTextColor(UI_INK); gfx->setTextSize(2);
++      gfx->setCursor(x+KB_W/2-6,y+KB_H/2-10); gfx->print(t);
++    } else {
++      const char *lab=(i==27)?"한글":(i==28?"<-":(gLang==LANG_KO?"확인":"OK"));
++      if(i==28) {
++        gfx->setTextColor(UI_INK); gfx->setTextSize(2);
++        gfx->setCursor(x+KB_W/2-15,y+KB_H/2-10); gfx->print(lab);
++      } else uiPrintAt(lab,x+(KB_W-6-uiTextWidth(lab,1))/2,y+13,UI_INK,1);
++    }
++  }
+ }
+ 
+ void renderKeyboard() {
+   gfx->fillScreen(RGB565_BLACK);
+-  gfx->fillCircle(CX, CY, 231, UI_BG_DAY);
+-  uiPrintCenter(T(S_NAME), 52, UI_INK, 2);
+-  // buffer actual
+-  gfx->fillRoundRect(83, 84, 300, 40, 8, UI_WHITE);
+-  gfx->drawRoundRect(83, 84, 300, 40, 8, UI_INK);
+-  gfx->setTextSize(3);
+-  gfx->setCursor(95, 94);
+-  gfx->print(nameLen ? nameBuf : "_");
+-
+-  for (int i = 0; i < 30; i++) {
+-    int x = KB_X + (i % KB_COLS) * KB_W, y = KB_Y + (i / KB_COLS) * KB_H;
+-    bool special = (i >= 28);
+-    gfx->fillRoundRect(x, y, KB_W - 6, KB_H - 6, 6, special ? UI_BAR_WARN : UI_WHITE);
+-    gfx->drawRoundRect(x, y, KB_W - 6, KB_H - 6, 6, UI_INK);
+-    gfx->setTextColor(UI_INK);
+-    gfx->setTextSize(2);
+-    if (i < 28) {
+-      gfx->setCursor(x + KB_W / 2 - 9, y + KB_H / 2 - 10);
+-      gfx->print(KB_KEYS[i]);
+-    } else {
+-      const char *lab = (i == 28) ? "<-" : (gLang == LANG_KO ? "확인" : "OK");
+-      if (gLang == LANG_KO && i == 29) uiPrintAt(lab, x + (KB_W-6-uiTextWidth(lab,1))/2, y + 13, UI_INK, 1);
+-      else { gfx->setCursor(x + KB_W / 2 - 15, y + KB_H / 2 - 10); gfx->print(lab); }
+-    }
+-  }
++  gfx->fillCircle(CX,CY,231,UI_BG_DAY);
++  uiPrintCenter(kbHangulMode?"한글 이름":"ABC 이름",45,UI_INK,2);
++  renderNameBuffer();
++  if(kbHangulMode) renderKeyboardHangul(); else renderKeyboardLatin();
+   gfx->flush();
+ }
+ 
+-void keyboardTap(int16_t x, int16_t y) {
+-  int col = (x - KB_X) / KB_W, row = (y - KB_Y) / KB_H;
+-  if (col < 0 || col >= KB_COLS || row < 0 || row >= 5) return;
+-  int i = row * KB_COLS + col;
+-  if (i >= 30) return;
+-  if (i == 28) {  // borrar
+-    if (nameLen) nameBuf[--nameLen] = 0;
+-  } else if (i == 29) {  // OK
+-    pet.rename(nameBuf);
+-    kbOpen = false;
+-  } else if (nameLen < sizeof(nameBuf) - 1) {
+-    nameBuf[nameLen++] = KB_KEYS[i];
+-    nameBuf[nameLen] = 0;
+-  }
++static void keyboardConfirm() {
++  if(kbHangulMode) kbIme.commit(nameBuf,sizeof(nameBuf));
++  kbSyncLen();
++  pet.rename(nameBuf);
++  kbOpen=false;
++}
++
++static void keyboardTapHangul(int16_t x,int16_t y) {
++  if(y>=374 && y<426) {
++    if(x>=92 && x<220) {
++      kbIme.commit(nameBuf,sizeof(nameBuf)); kbIme.resetCompose(); kbHangulMode=false; kbSyncLen(); return;
++    }
++    if(x>=246 && x<374) { keyboardConfirm(); return; }
++  }
++  int col=(x-KKO_X)/KKO_W, row=(y-KKO_Y)/KKO_H;
++  if(x<KKO_X || col<0 || col>=3 || row<0 || row>=4) return;
++  if(row==0) {
++    static const uint8_t tok[3]={2,0,1}; // ㅣ, ㆍ, ㅡ
++    kbIme.inputVowel(tok[col],nameBuf,sizeof(nameBuf));
++  } else if(row==1) {
++    kbIme.inputGroup((uint8_t)col,nameBuf,sizeof(nameBuf));          // ㄱㅋ ㄴㄹ ㄷㅌ
++  } else if(row==2) {
++    kbIme.inputGroup((uint8_t)(3+col),nameBuf,sizeof(nameBuf));      // ㅂㅍ ㅅㅎ ㅈㅊ
++  } else {
++    if(col==0) kbIme.inputGroup(6,nameBuf,sizeof(nameBuf));          // ㅇㅁ
++    else if(col==1) kbIme.inputDouble();                            // 쌍자음
++    else kbIme.backspace(nameBuf);
++  }
++  kbSyncLen();
++}
++
++static void keyboardTapLatin(int16_t x,int16_t y) {
++  int col=(x-KB_X)/KB_W, row=(y-KB_Y)/KB_H;
++  if(col<0||col>=KB_COLS||row<0||row>=5) return;
++  int i=row*KB_COLS+col; if(i>=30) return;
++  if(i<27) {
++    if(HangulComposer::utf8Count(nameBuf)<HangulComposer::MAX_NAME_CP && nameLen+1<sizeof(nameBuf)) {
++      nameBuf[nameLen++]=KB_LATIN[i]; nameBuf[nameLen]=0;
++    }
++  } else if(i==27) {
++    kbIme.resetCompose(); kbHangulMode=true;
++  } else if(i==28) {
++    HangulComposer::popUtf8(nameBuf); kbSyncLen();
++  } else keyboardConfirm();
++}
++
++void keyboardTap(int16_t x,int16_t y) {
++  if(kbHangulMode) keyboardTapHangul(x,y);
++  else keyboardTapLatin(x,y);
+ }
+ 
+ // ---------- galeria pokedex ----------
+--- a/pet.h
++++ b/pet.h
+@@ -57,7 +57,7 @@
+   uint32_t lastCareDay = 0;
+   // vinculo (del bicho: sube lento con cuidado, se resetea al nacer otro)
+   uint8_t bond = 0;
+-  char nick[12] = "";    // apodo (vacio = nombre de especie)
++  char nick[40] = "";    // apodo (vacio = nombre de especie)
+   // medallas: del individuo + contador acumulado entre todas las crianzas
+   uint16_t medals = 0, totalMedals = 0;
+   uint16_t newMedal = 0;   // recien conseguida(s), para celebrar
