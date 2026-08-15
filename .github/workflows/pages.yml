@@ -23,7 +23,7 @@ jobs:
 
       - name: Extract validated CLEAN v1.2 source
         run: |
-          rm -rf source source_alarm
+          rm -rf source source_alarm source_combo
           mkdir -p source
           unzip -q source_package.zip -d source
           test -f source/TamaPoke/TamaPoke.ino
@@ -35,23 +35,16 @@ jobs:
           import re
           p = Path('source/TamaPoke/TamaPoke.ino')
           s = p.read_text(encoding='utf-8')
-
-          # Ball game: game-over best score
           pat1 = r'gfx->setTextColor\(ink\);\s*gfx->setCursor\(CX - strlen\(rec\) \* 6, 214\);\s*gfx->print\(rec\);'
-          # Ball game: live best score
           pat2 = r'gfx->setTextSize\(2\);\s*gfx->setCursor\(CX - strlen\(rec\) \* 6, 76\);\s*gfx->print\(rec\);'
-          # Strength training: result best score (non-new-record branch)
           pat3 = r'gfx->setTextColor\(ink\);\s*gfx->setCursor\(CX - strlen\(r\) \* 6, 256\);\s*gfx->print\(r\);'
-
           s, n1 = re.subn(pat1, 'uiPrintCenter(rec, 214, ink, 2);', s, count=1)
           s, n2 = re.subn(pat2, 'uiPrintCenter(rec, 76, ink, 2);', s, count=1)
           s, n3 = re.subn(pat3, 'uiPrintCenter(r, 256, ink, 2);', s, count=1)
-
           if n1 != 1 or n2 != 1 or n3 != 1:
               raise SystemExit(f'Korean renderer patch count mismatch: gameover={n1}, live={n2}, training={n3}')
-
           p.write_text(s, encoding='utf-8')
-          print('stable Korean renderers patched: ball game 2 + training 1')
+          print('stable Korean renderers patched')
           PY
 
       - name: Prepare alarm test source
@@ -70,6 +63,21 @@ jobs:
           python3 alarm_test/ui_fix_v11.py
           grep -q '1.5-ko-alarm1.1' source_alarm/TamaPoke/TamaPoke.ino
           echo 'alarm test v1.1 patch applied'
+
+      - name: Prepare combined alarm + Cheonjiin source
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends fonts-nanum python3-pil
+          mkdir -p source_combo
+          cp -a source_alarm/TamaPoke source_combo/TamaPoke
+          cp combo_test/hangul_cheonjiin.h source_combo/TamaPoke/hangul_cheonjiin.h
+          python3 combo_test/gen_hangul_font.py source_combo/TamaPoke/hangul_full16.h
+          cd source_combo/TamaPoke
+          patch -p1 < ../../combo_test/keyboard.patch
+          grep -q '1.6-ko-combo1.0' TamaPoke.ino
+          grep -q 'char nick\[40\]' pet.h
+          test -s hangul_full16.h
+          echo 'combined test source prepared'
 
       - name: Install Arduino CLI
         uses: arduino/setup-arduino-cli@v2
@@ -94,25 +102,29 @@ jobs:
 
       - name: Compile stable firmware
         run: |
-          rm -rf build_stable
-          mkdir build_stable
+          rm -rf build_stable && mkdir build_stable
           arduino-cli compile \
             --fqbn "esp32:esp32:esp32s3:CDCOnBoot=cdc,FlashSize=16M,PSRAM=opi,PartitionScheme=app3M_fat9M_16MB" \
-            --build-path build_stable \
-            source/TamaPoke
+            --build-path build_stable source/TamaPoke
           test -f build_stable/TamaPoke.ino.bin
 
       - name: Compile alarm test firmware
         run: |
-          rm -rf build_alarm
-          mkdir build_alarm
+          rm -rf build_alarm && mkdir build_alarm
           arduino-cli compile \
             --fqbn "esp32:esp32:esp32s3:CDCOnBoot=cdc,FlashSize=16M,PSRAM=opi,PartitionScheme=app3M_fat9M_16MB" \
-            --build-path build_alarm \
-            source_alarm/TamaPoke
+            --build-path build_alarm source_alarm/TamaPoke
           test -f build_alarm/TamaPoke.ino.bin
 
-      - name: Prepare two web installers
+      - name: Compile combined Cheonjiin test firmware
+        run: |
+          rm -rf build_combo && mkdir build_combo
+          arduino-cli compile \
+            --fqbn "esp32:esp32:esp32s3:CDCOnBoot=cdc,FlashSize=16M,PSRAM=opi,PartitionScheme=app3M_fat9M_16MB" \
+            --build-path build_combo source_combo/TamaPoke
+          test -f build_combo/TamaPoke.ino.bin
+
+      - name: Prepare three web installers
         run: |
           set -e
           rm -rf site
@@ -126,12 +138,7 @@ jobs:
           SFW=tamapoke-ko-stable-textfix2-${SSHORT}.bin
           cp "$STABLE" "site/firmware/$SFW"
           cat > site/manifest.json <<EOF
-          {
-            "name": "TamaPoke KO Stable",
-            "version": "1.4-ko-clean1.2-textfix2-${SSHORT}",
-            "new_install_prompt_erase": true,
-            "builds": [{"chipFamily":"ESP32-S3","parts":[{"path":"firmware/$SFW","offset":65536}]}]
-          }
+          {"name":"TamaPoke KO Stable","version":"1.4-ko-clean1.2-textfix2-${SSHORT}","new_install_prompt_erase":true,"builds":[{"chipFamily":"ESP32-S3","parts":[{"path":"firmware/$SFW","offset":65536}]}]}
           EOF
 
           ALARM=build_alarm/TamaPoke.ino.bin
@@ -140,15 +147,19 @@ jobs:
           AFW=tamapoke-ko-alarm-test-v11-${ASHORT}.bin
           cp "$ALARM" "site/firmware/$AFW"
           cat > site/manifest-alarm.json <<EOF
-          {
-            "name": "TamaPoke KO Alarm Test",
-            "version": "1.5-ko-alarm1.1-test-${ASHORT}",
-            "new_install_prompt_erase": true,
-            "builds": [{"chipFamily":"ESP32-S3","parts":[{"path":"firmware/$AFW","offset":65536}]}]
-          }
+          {"name":"TamaPoke KO Alarm Test","version":"1.5-ko-alarm1.1-test-${ASHORT}","new_install_prompt_erase":true,"builds":[{"chipFamily":"ESP32-S3","parts":[{"path":"firmware/$AFW","offset":65536}]}]}
           EOF
 
-          printf 'Stable SHA256: %s\nAlarm-test SHA256: %s\nFlash offset: 0x10000\nStable fixes: ball-game best score + training best score Korean rendering\nAlarm v1.1 fixes: inherits stable text fixes + battery moved inside circle + date/weekday split rendering\n' "$SSHA" "$ASHA" > site/build-info.txt
+          COMBO=build_combo/TamaPoke.ino.bin
+          CSHA=$(sha256sum "$COMBO" | awk '{print $1}')
+          CSHORT=${CSHA:0:12}
+          CFW=tamapoke-ko-combo-cheonjiin-v10-${CSHORT}.bin
+          cp "$COMBO" "site/firmware/$CFW"
+          cat > site/manifest-combo.json <<EOF
+          {"name":"TamaPoke KO Alarm + Cheonjiin Test","version":"1.6-ko-combo1.0-test-${CSHORT}","new_install_prompt_erase":true,"builds":[{"chipFamily":"ESP32-S3","parts":[{"path":"firmware/$CFW","offset":65536}]}]}
+          EOF
+
+          printf 'Stable SHA256: %s\nAlarm-test SHA256: %s\nCombo-test SHA256: %s\nFlash offset: 0x10000\nCombo: stable fixes + alarm v1.1 + UTF-8 Cheonjiin nickname keyboard + full Hangul fallback\n' "$SSHA" "$ASHA" "$CSHA" > site/build-info.txt
 
       - name: Configure Pages
         uses: actions/configure-pages@v5
