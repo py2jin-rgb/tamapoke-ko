@@ -133,6 +133,7 @@ jobs:
           rm -rf site
           mkdir -p site/firmware
           cp docs/index.html site/index.html
+          python3 combo_test/page_v11.py
           touch site/.nojekyll
 
           STABLE=build_stable/TamaPoke.ino.bin
