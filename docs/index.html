@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#10141c">
+<title>TamaPoke KO · 온라인 설치</title>
+<style>
+body{margin:0;background:#10141c;color:#f5f7fb;font-family:system-ui,-apple-system,"Malgun Gothic",sans-serif}.wrap{max-width:680px;margin:auto;padding:40px 18px}.card{background:#1a202b;border:1px solid #30394a;border-radius:18px;padding:22px;margin:18px 0}h1{font-size:30px;margin:0 0 8px}.sub,.small{color:#aeb7c7}.ok{color:#69db91}.warn{background:#302814;border:1px solid #806d30;border-radius:12px;padding:14px;color:#ffe59a}.install{text-align:center;padding:22px 0}button{border:0;border-radius:13px;padding:15px 25px;background:#69db91;color:#07120b;font-size:18px;font-weight:800;cursor:pointer}.step{margin:10px 0}code{background:#0b0e13;padding:2px 6px;border-radius:5px}footer{margin-top:28px;color:#8f99aa;font-size:12px}</style>
+</head>
+<body><div class="wrap">
+<h1>🔴 TamaPoke 한국어판</h1>
+<p class="sub">CLEAN v1.2 · Waveshare ESP32-S3-Touch-AMOLED-1.75</p>
+<div class="card">
+<h2>⚡ 온라인 펌웨어 업데이트</h2>
+<p class="ok">✓ 한글 14/18/22px UI 폰트</p>
+<p class="ok">✓ 한글+숫자/영문 혼합 문자열 깨짐 수정</p>
+<p class="ok">✓ 하단 버튼 및 공놀이 터치 보정</p>
+<div class="warn"><b>중요:</b> 기존 포켓몬을 유지하려면 전체 Erase/초기화를 선택하지 마세요. 이 설치기는 앱 영역 <code>0x10000</code>만 업데이트합니다.</div>
+<div class="install">
+<esp-web-install-button id="installer" manifest="manifest.json">
+<button slot="activate">⚡ 다마포켓에 설치</button>
+<span slot="unsupported">PC용 Chrome 또는 Edge가 필요합니다.</span>
+<span slot="not-allowed">HTTPS 페이지에서 실행하세요.</span>
+</esp-web-install-button>
+</div>
+<p class="small">USB 데이터 케이블로 연결 → 설치 버튼 → ESP32-S3/USB Serial 포트 선택 → 완료까지 기다리면 됩니다.</p>
+</div>
+<div class="card"><h2>설치 순서</h2>
+<div class="step">1. 다마포켓을 USB 데이터 케이블로 PC에 연결</div>
+<div class="step">2. 위의 <b>다마포켓에 설치</b> 클릭</div>
+<div class="step">3. ESP32-S3 USB 포트 선택</div>
+<div class="step">4. Erase/초기화 질문이 나오면 기존 데이터 유지 선택</div>
+<div class="step">5. 설치 완료 후 재부팅되면 끝</div>
+</div>
+<div class="card"><h2>처음 조립한 새 기기</h2><p>이 페이지는 기존 TamaPoke 앱 업데이트용입니다. 완전 새 보드는 먼저 원작 TamaPoke의 부트로더/파티션과 microSD 스프라이트를 설치한 뒤 사용하세요.</p></div>
+<footer>비공식·비상업적 한국어 패치 · 원작 socquique/TamaPoke 기반 · Web flashing powered by ESP Web Tools.</footer>
+</div>
+<script type="module" src="https://unpkg.com/esp-web-tools@10/dist/web/install-button.js?module"></script>
+</body></html>
