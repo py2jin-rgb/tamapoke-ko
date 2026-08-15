@@ -74,10 +74,13 @@ jobs:
           python3 combo_test/gen_hangul_font.py source_combo/TamaPoke/hangul_full16.h
           cd source_combo/TamaPoke
           patch -p1 < ../../combo_test/keyboard.patch
-          grep -q '1.6-ko-combo1.0' TamaPoke.ino
-          grep -q 'char nick\[40\]' pet.h
-          test -s hangul_full16.h
-          echo 'combined test source prepared'
+          cd ../..
+          python3 combo_test/day_standby_v11.py
+          grep -q '1.6-ko-combo1.1' source_combo/TamaPoke/TamaPoke.ino
+          grep -q 'char nick\[40\]' source_combo/TamaPoke/pet.h
+          grep -q 'drawStandbyAwakePet' source_combo/TamaPoke/TamaPoke.ino
+          test -s source_combo/TamaPoke/hangul_full16.h
+          echo 'combined test v1.1 source prepared'
 
       - name: Install Arduino CLI
         uses: arduino/setup-arduino-cli@v2
@@ -153,13 +156,13 @@ jobs:
           COMBO=build_combo/TamaPoke.ino.bin
           CSHA=$(sha256sum "$COMBO" | awk '{print $1}')
           CSHORT=${CSHA:0:12}
-          CFW=tamapoke-ko-combo-cheonjiin-v10-${CSHORT}.bin
+          CFW=tamapoke-ko-combo-cheonjiin-v11-${CSHORT}.bin
           cp "$COMBO" "site/firmware/$CFW"
           cat > site/manifest-combo.json <<EOF
-          {"name":"TamaPoke KO Alarm + Cheonjiin Test","version":"1.6-ko-combo1.0-test-${CSHORT}","new_install_prompt_erase":true,"builds":[{"chipFamily":"ESP32-S3","parts":[{"path":"firmware/$CFW","offset":65536}]}]}
+          {"name":"TamaPoke KO Alarm + Cheonjiin Test","version":"1.6-ko-combo1.1-test-${CSHORT}","new_install_prompt_erase":true,"builds":[{"chipFamily":"ESP32-S3","parts":[{"path":"firmware/$CFW","offset":65536}]}]}
           EOF
 
-          printf 'Stable SHA256: %s\nAlarm-test SHA256: %s\nCombo-test SHA256: %s\nFlash offset: 0x10000\nCombo: stable fixes + alarm v1.1 + UTF-8 Cheonjiin nickname keyboard + full Hangul fallback\n' "$SSHA" "$ASHA" "$CSHA" > site/build-info.txt
+          printf 'Stable SHA256: %s\nAlarm-test SHA256: %s\nCombo-test SHA256: %s\nFlash offset: 0x10000\nCombo v1.1: stable fixes + alarm v1.1 + UTF-8 Cheonjiin nickname keyboard + full Hangul fallback + daytime sun/walking standby (06:00-19:59)\n' "$SSHA" "$ASHA" "$CSHA" > site/build-info.txt
 
       - name: Configure Pages
         uses: actions/configure-pages@v5
