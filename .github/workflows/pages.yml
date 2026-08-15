@@ -28,6 +28,34 @@ jobs:
           unzip -q source_package.zip -d source
           test -f source/TamaPoke/TamaPoke.ino
 
+      - name: Patch Korean best-score renderer
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('source/TamaPoke/TamaPoke.ino')
+          s = p.read_text(encoding='utf-8')
+
+          old1 = '''      gfx->setTextColor(ink);
+          gfx->setCursor(CX - strlen(rec) * 6, 214);
+          gfx->print(rec);'''
+          new1 = '''      uiPrintCenter(rec, 214, ink, 2);'''
+
+          old2 = '''  gfx->setTextSize(2);
+          gfx->setCursor(CX - strlen(rec) * 6, 76);
+          gfx->print(rec);'''
+          new2 = '''  uiPrintCenter(rec, 76, ink, 2);'''
+
+          if old1 not in s:
+              raise SystemExit('game-over best-score renderer pattern not found')
+          if old2 not in s:
+              raise SystemExit('live best-score renderer pattern not found')
+
+          s = s.replace(old1, new1, 1)
+          s = s.replace(old2, new2, 1)
+          p.write_text(s, encoding='utf-8')
+          print('Korean best-score renderer patched: 2 locations')
+          PY
+
       - name: Install Arduino CLI
         uses: arduino/setup-arduino-cli@v2
         with:
@@ -49,7 +77,7 @@ jobs:
           arduino-cli lib install "SensorLib@0.3.1"
           arduino-cli lib install "XPowersLib@0.2.6"
 
-      - name: Compile TamaPoke KO CLEAN v1.2
+      - name: Compile TamaPoke KO CLEAN v1.2 game text fix
         run: |
           rm -rf build
           mkdir build
@@ -68,12 +96,12 @@ jobs:
           APP=build/TamaPoke.ino.bin
           SHA=$(sha256sum "$APP" | awk '{print $1}')
           SHORT=${SHA:0:12}
-          FW=tamapoke-ko-clean1.2-${SHORT}.bin
+          FW=tamapoke-ko-clean1.2-gamefontfix-${SHORT}.bin
           cp "$APP" "site/firmware/$FW"
           cat > site/manifest.json <<EOF
           {
             "name": "TamaPoke KO CLEAN",
-            "version": "1.4-ko-clean1.2-${SHORT}",
+            "version": "1.4-ko-clean1.2-gamefontfix-${SHORT}",
             "new_install_prompt_erase": true,
             "builds": [
               {
@@ -85,7 +113,7 @@ jobs:
             ]
           }
           EOF
-          printf 'Firmware SHA256: %s\nFlash offset: 0x10000\n' "$SHA" > site/build-info.txt
+          printf 'Firmware SHA256: %s\nFlash offset: 0x10000\nFix: Korean BEST score renderer\n' "$SHA" > site/build-info.txt
 
       - name: Configure Pages
         uses: actions/configure-pages@v5
