@@ -1,0 +1,110 @@
+name: Build firmware and deploy installer
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Extract validated CLEAN v1.2 source
+        run: |
+          rm -rf source
+          mkdir -p source
+          unzip -q source_package.zip -d source
+          test -f source/TamaPoke/TamaPoke.ino
+
+      - name: Install Arduino CLI
+        uses: arduino/setup-arduino-cli@v2
+        with:
+          version: "1.x"
+
+      - name: Configure ESP32 board manager
+        run: |
+          arduino-cli config init --overwrite
+          arduino-cli config add board_manager.additional_urls https://espressif.github.io/arduino-esp32/package_esp32_index.json
+          arduino-cli core update-index
+
+      - name: Install ESP32 core 3.1.0
+        run: arduino-cli core install esp32:esp32@3.1.0
+
+      - name: Install libraries
+        run: |
+          arduino-cli lib update-index
+          arduino-cli lib install "GFX Library for Arduino@1.6.7"
+          arduino-cli lib install "SensorLib@0.3.1"
+          arduino-cli lib install "XPowersLib@0.2.6"
+
+      - name: Compile TamaPoke KO CLEAN v1.2
+        run: |
+          rm -rf build
+          mkdir build
+          arduino-cli compile \
+            --fqbn "esp32:esp32:esp32s3:CDCOnBoot=cdc,FlashSize=16M,PSRAM=opi,PartitionScheme=app3M_fat9M_16MB" \
+            --build-path build \
+            source/TamaPoke
+          test -f build/TamaPoke.ino.bin
+
+      - name: Prepare web installer
+        run: |
+          set -e
+          mkdir -p site/firmware
+          cp docs/index.html site/index.html
+          touch site/.nojekyll
+          APP=build/TamaPoke.ino.bin
+          SHA=$(sha256sum "$APP" | awk '{print $1}')
+          SHORT=${SHA:0:12}
+          FW=tamapoke-ko-clean1.2-${SHORT}.bin
+          cp "$APP" "site/firmware/$FW"
+          cat > site/manifest.json <<EOF
+          {
+            "name": "TamaPoke KO CLEAN",
+            "version": "1.4-ko-clean1.2-${SHORT}",
+            "new_install_prompt_erase": true,
+            "builds": [
+              {
+                "chipFamily": "ESP32-S3",
+                "parts": [
+                  { "path": "firmware/$FW", "offset": 65536 }
+                ]
+              }
+            ]
+          }
+          EOF
+          printf 'Firmware SHA256: %s\nFlash offset: 0x10000\n' "$SHA" > site/build-info.txt
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    permissions:
+      pages: write
+      id-token: write
+    steps:
+      - name: Deploy GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
