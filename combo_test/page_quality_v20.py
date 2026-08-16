@@ -45,20 +45,42 @@ once(
 
 ino.write_text(src, encoding='utf-8')
 
+# The clock screen is shared by the ② alarm build and ③ combo build. Apply the
+# same centered battery/USB charging-aware watch face to both sources here,
+# after all source-generation patches have finished.
+subprocess.run([
+    'python3', 'clock_polish_v13.py',
+    'source_alarm/TamaPoke', 'source_combo/TamaPoke'
+], check=True)
+
+fqbn = 'esp32:esp32:esp32s3:CDCOnBoot=cdc,FlashSize=16M,PSRAM=opi,PartitionScheme=app3M_fat9M_16MB'
+
+# Recompile alarm so the second installer also receives the new clock UI.
+alarm_build = Path('build_alarm')
+if alarm_build.exists():
+    shutil.rmtree(alarm_build)
+alarm_build.mkdir()
+subprocess.run([
+    'arduino-cli', 'compile', '--fqbn', fqbn,
+    '--build-path', str(alarm_build), 'source_alarm/TamaPoke'
+], check=True)
+if not (alarm_build / 'TamaPoke.ino.bin').is_file():
+    raise SystemExit('clock-polished alarm firmware binary missing')
+print('alarm clock UI firmware compiled successfully')
+
 # Compile again so the web installer receives the polished source rather than the
 # earlier 2.0 binary produced one step before this script runs.
 build = Path('build_combo')
 if build.exists():
     shutil.rmtree(build)
 build.mkdir()
-fqbn = 'esp32:esp32:esp32s3:CDCOnBoot=cdc,FlashSize=16M,PSRAM=opi,PartitionScheme=app3M_fat9M_16MB'
 subprocess.run([
     'arduino-cli', 'compile', '--fqbn', fqbn,
     '--build-path', str(build), 'source_combo/TamaPoke'
 ], check=True)
 if not (build / 'TamaPoke.ino.bin').is_file():
     raise SystemExit('final polished combo firmware binary missing')
-print('final firmware polish compiled successfully')
+print('final firmware + clock polish compiled successfully')
 
 # ---- Installer page text ----
 p = Path('site/index.html')
@@ -93,4 +115,7 @@ if marker not in s:
 s = s.replace(marker, add, 1)
 
 p.write_text(s, encoding='utf-8')
-print('installer page updated for quality games 2.0 FINAL')
+
+# Finally annotate both ② and ③ cards with the new clock/charging behavior.
+subprocess.run(['python3', 'combo_test/page_clock_v13.py'], check=True)
+print('installer page updated for quality games 2.0 FINAL + clock UI')
