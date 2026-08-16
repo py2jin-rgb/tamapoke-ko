@@ -11,10 +11,8 @@ def one(old, new, label):
         raise SystemExit(f'marker not found: {label}')
     s = s.replace(old, new, 1)
 
-# Version: only the combo build receives this patch.
 s = re.sub(r'#define FW_VERSION "[^"]+"', '#define FW_VERSION "1.8-ko-combo-games1-datefont"', s, count=1)
 
-# Date fields live next to the existing time editor.
 one(
 '''int clockH = 12, clockM = 0;  // hora en edicion
 uint8_t clockPage = 0;        // 0 menu, 1 hora, 2 alarma, 3 alarm-h, 4 alarm-min''',
@@ -23,7 +21,6 @@ int clockY = 2026, clockMo = 1, clockD = 1; // fecha RTC en edicion
 uint8_t clockPage = 0;        // 0 menu, 1 hora/fecha, 2 alarma, 3 alarm-h, 4 alarm-min, 5 fecha''',
 'clock date fields')
 
-# Load both date and time from the RTC/pet clock when settings opens.
 one(
 '''void openClock() {
   uint32_t e = pet.lastSeenEpoch ? pet.lastSeenEpoch : rtcEpoch();
@@ -89,18 +86,16 @@ void applyClock() {
   if (tt <= 0) return;
   uint32_t e = (uint32_t)tt;
   rtcSetEpoch(e);
-  pet.setClock(e);  // setting the calendar never applies fake offline progression
+  pet.setClock(e);
   clockPage = 0;
 }''',
 'open/apply clock date support')
 
-# Settings menu: larger row text, still inside the existing 342x48 row.
 one(
 '''  uiPrintAt(label, 82, y + 12, UI_INK, 2);''',
 '''  uiPrintAt(label, 82, y + 9, UI_INK, gLang == LANG_KO ? 3 : 2);''',
 'larger settings rows')
 
-# Time page now contains a date entry button.
 one(
 '''static void renderTimeAdjust() {
   gfx->fillScreen(RGB565_BLACK);
@@ -144,7 +139,6 @@ one(
 }''',
 'time/date entry page')
 
-# New date editor: three independent +/- columns and month-length/leap-year clamp.
 marker = 'static void renderAlarmSettings() {'
 if marker not in s:
     raise SystemExit('date page insertion marker missing')
@@ -157,7 +151,9 @@ date_block = r'''static void renderDateAdjust() {
   gfx->setTextColor(UI_INK); gfx->setTextSize(4);
   gfx->setCursor(CX - (int)strlen(db) * 12, 92); gfx->print(db);
 
-  uiPrintCenter(koOr("년              월              일","YEAR       MONTH       DAY"), 154, UI_INK, 2);
+  uiPrintAt(koOr("년","YEAR"), 66, 154, UI_INK, 2);
+  uiPrintAt(koOr("월","MONTH"), 202, 154, UI_INK, 2);
+  uiPrintAt(koOr("일","DAY"), 344, 154, UI_INK, 2);
 
   drawClockBtn(36, 196, "-");   drawClockBtn(98, 196, "+");
   drawClockBtn(174, 196, "-");  drawClockBtn(236, 196, "+");
@@ -180,7 +176,6 @@ date_block = r'''static void renderDateAdjust() {
 '''
 s = s.replace(marker, date_block + marker, 1)
 
-# Alarm labels are safe to enlarge.
 one(
 '''  uiPrintAt(koOr("알람","ALARM"), 76, 102, UI_INK, 2);''',
 '''  uiPrintAt(koOr("알람","ALARM"), 76, 98, UI_INK, gLang == LANG_KO ? 3 : 2);''',
@@ -190,7 +185,6 @@ one(
 '''  uiPrintAt(koOr("시간","TIME"), 78, 172, UI_INK, gLang == LANG_KO ? 3 : 2);''',
 'larger alarm time label')
 
-# Render the new page.
 one(
 '''  else if (clockPage == 3) renderAlarmNumber(true);
   else renderAlarmNumber(false);''',
@@ -199,7 +193,6 @@ one(
   else renderDateAdjust();''',
 'clock page dispatch')
 
-# Touch logic for time page + date page.
 one(
 '''  if (clockPage == 1) {
     if (y >= 190 && y <= 248) {
@@ -228,10 +221,10 @@ one(
   }''',
 'time page touch')
 
-# Add date touch handler before alarm-number handler.
-old = '''  if (clockPage == 3 || clockPage == 4) {
-    bool hp = clockPage == 3;'''
-new = '''  if (clockPage == 5) {
+one(
+'''  if (clockPage == 3 || clockPage == 4) {
+    bool hp = clockPage == 3;''',
+'''  if (clockPage == 5) {
     if (y >= 190 && y <= 262) {
       if      (x >= 30  && x < 94)  clockY--;
       else if (x >= 94  && x < 166) clockY++;
@@ -248,10 +241,9 @@ new = '''  if (clockPage == 5) {
   }
 
   if (clockPage == 3 || clockPage == 4) {
-    bool hp = clockPage == 3;'''
-one(old, new, 'date touch handler')
+    bool hp = clockPage == 3;''',
+'date touch handler')
 
-# Standby date/weekday: one visual step larger on Korean only.
 one(
 '''    const int dateW = (int)strlen(db) * 12;  // native GFX textSize(2): 6 px * 2
     const int gap = 8;
@@ -260,7 +252,7 @@ one(
     gfx->setTextColor(UI_WHITE); gfx->setTextSize(2);
     gfx->setCursor(x0, 184); gfx->print(db);
     uiPrintAt(wd, x0 + dateW + gap, 184, UI_WHITE, 2);''',
-'''    const int dateW = (int)strlen(db) * 18;  // native GFX textSize(3): 6 px * 3
+'''    const int dateW = (int)strlen(db) * 18;
     const int gap = 10;
     const int totalW = dateW + gap + uiTextWidth(wd, 3);
     const int x0 = CX - totalW / 2;
@@ -269,8 +261,6 @@ one(
     uiPrintAt(wd, x0 + dateW + gap, 178, UI_WHITE, 3);''',
 'larger standby date')
 
-# Main Korean status labels: enlarge only Korean and compute bar start dynamically,
-# so the larger label cannot overlap the bar or the neighboring column.
 one(
 '''void drawBar(int x, int y, const char *label, uint8_t val) {
   uiPrintAt(label, x, y-2, inkColor(), 2);
@@ -299,9 +289,8 @@ one(
   int fw = (bw - 4) * val / 100;
   if (fw > 0) gfx->fillRoundRect(bx + 2, y + 3, fw, bh - 4, 3, fill);
 }''',
-larger Korean status labels')
+'larger Korean status labels')
 
-# New minigame menu/button labels: larger where the cards have ample room.
 one(
 '''  uiPrintAt(label, x+(w-uiTextWidth(label,2))/2, y+h-30, UI_INK, 2);''',
 '''  uint8_t lfs = (gLang == LANG_KO ? 3 : 2);
