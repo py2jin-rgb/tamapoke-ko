@@ -21,50 +21,44 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Extract validated CLEAN v1.2 source
+      - name: Extract base source
         run: |
           rm -rf source source_alarm source_combo
           mkdir -p source
           unzip -q source_package.zip -d source
           test -f source/TamaPoke/TamaPoke.ino
 
-      - name: Patch Korean stable text renderers
+      - name: Patch stable Korean renderers
         run: |
           python3 - <<'PY'
           from pathlib import Path
           import re
-          p = Path('source/TamaPoke/TamaPoke.ino')
-          s = p.read_text(encoding='utf-8')
-          pat1 = r'gfx->setTextColor\(ink\);\s*gfx->setCursor\(CX - strlen\(rec\) \* 6, 214\);\s*gfx->print\(rec\);'
-          pat2 = r'gfx->setTextSize\(2\);\s*gfx->setCursor\(CX - strlen\(rec\) \* 6, 76\);\s*gfx->print\(rec\);'
-          pat3 = r'gfx->setTextColor\(ink\);\s*gfx->setCursor\(CX - strlen\(r\) \* 6, 256\);\s*gfx->print\(r\);'
-          s, n1 = re.subn(pat1, 'uiPrintCenter(rec, 214, ink, 2);', s, count=1)
-          s, n2 = re.subn(pat2, 'uiPrintCenter(rec, 76, ink, 2);', s, count=1)
-          s, n3 = re.subn(pat3, 'uiPrintCenter(r, 256, ink, 2);', s, count=1)
-          if n1 != 1 or n2 != 1 or n3 != 1:
-              raise SystemExit(f'Korean renderer patch count mismatch: gameover={n1}, live={n2}, training={n3}')
-          p.write_text(s, encoding='utf-8')
-          print('stable Korean renderers patched')
+          p=Path('source/TamaPoke/TamaPoke.ino')
+          s=p.read_text(encoding='utf-8')
+          pats=[
+            (r'gfx->setTextColor\(ink\);\s*gfx->setCursor\(CX - strlen\(rec\) \* 6, 214\);\s*gfx->print\(rec\);','uiPrintCenter(rec, 214, ink, 2);'),
+            (r'gfx->setTextSize\(2\);\s*gfx->setCursor\(CX - strlen\(rec\) \* 6, 76\);\s*gfx->print\(rec\);','uiPrintCenter(rec, 76, ink, 2);'),
+            (r'gfx->setTextColor\(ink\);\s*gfx->setCursor\(CX - strlen\(r\) \* 6, 256\);\s*gfx->print\(r\);','uiPrintCenter(r, 256, ink, 2);'),
+          ]
+          for pat,repl in pats:
+            s,n=re.subn(pat,repl,s,count=1)
+            if n!=1: raise SystemExit('stable renderer patch mismatch')
+          p.write_text(s,encoding='utf-8')
           PY
 
       - name: Prepare alarm source
         run: |
           mkdir -p source_alarm
           cp -a source/TamaPoke source_alarm/TamaPoke
-          cat alarm_test/patch_01.b64 alarm_test/patch_02.b64 alarm_test/patch_03.b64 alarm_test/patch_04.b64 \
-            | tr -d '\r\n' | base64 -d | gzip -dc > /tmp/alarm_test.patch
+          cat alarm_test/patch_01.b64 alarm_test/patch_02.b64 alarm_test/patch_03.b64 alarm_test/patch_04.b64 | tr -d '\r\n' | base64 -d | gzip -dc > /tmp/alarm.patch
           cd source_alarm/TamaPoke
-          patch -p1 < /tmp/alarm_test.patch
-          test -f alarm.cpp
-          test -f alarm.h
-          test -f alarm_font.h
-          grep -q '1.5-ko-alarm1.0' TamaPoke.ino
+          patch -p1 < /tmp/alarm.patch
           cd ../..
           python3 alarm_test/ui_fix_v11.py
+          test -f source_alarm/TamaPoke/alarm.cpp
           grep -q '1.5-ko-alarm1.1' source_alarm/TamaPoke/TamaPoke.ino
-          echo 'alarm source prepared'
 
-      - name: Prepare alarm + Cheonjiin source
+      - name: Prepare alarm plus Cheonjiin source
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y --no-install-recommends fonts-nanum python3-pil
@@ -78,37 +72,34 @@ jobs:
           python3 combo_test/day_standby_v11.py
           grep -q '1.6-ko-combo1.1' source_combo/TamaPoke/TamaPoke.ino
           grep -q 'char nick\[40\]' source_combo/TamaPoke/pet.h
-          grep -q 'drawStandbyAwakePet' source_combo/TamaPoke/TamaPoke.ino
           test -s source_combo/TamaPoke/hangul_full16.h
-          echo 'combo source prepared'
 
-      - name: Apply shared stability fixes
+      - name: Apply stability2 fixes
         run: |
           python3 stability_fix_v12.py source/TamaPoke source_alarm/TamaPoke source_combo/TamaPoke
-          grep -q 'stability1' source/TamaPoke/TamaPoke.ino
-          grep -q 'stability1' source_alarm/TamaPoke/TamaPoke.ino
-          grep -q 'stability1' source_combo/TamaPoke/TamaPoke.ino
-          grep -q 'return pet.sleeping || millis() - lastInteract >= 30000UL;' source_alarm/TamaPoke/TamaPoke.ino
-          grep -q 'return pet.sleeping || millis() - lastInteract >= 30000UL;' source_combo/TamaPoke/TamaPoke.ino
+          grep -q 'stability2' source/TamaPoke/TamaPoke.ino
+          grep -q 'stability2' source_alarm/TamaPoke/TamaPoke.ino
+          grep -q 'stability2' source_combo/TamaPoke/TamaPoke.ino
+          grep -q 'bool manualClockView = false' source_alarm/TamaPoke/TamaPoke.ino
+          grep -q 'bool manualClockView = false' source_combo/TamaPoke/TamaPoke.ino
+          grep -q 'return manualClockView || millis() - lastInteract >= 30000UL;' source_alarm/TamaPoke/TamaPoke.ino
+          grep -q 'return manualClockView || millis() - lastInteract >= 30000UL;' source_combo/TamaPoke/TamaPoke.ino
+          grep -q 'manualClockView = !manualClockView' source_alarm/TamaPoke/TamaPoke.ino
+          grep -q 'manualClockView = !manualClockView' source_combo/TamaPoke/TamaPoke.ino
           grep -q 'const bool dayMode = !pet.sleeping' source_combo/TamaPoke/TamaPoke.ino
-          echo 'three stability sources verified'
+          echo 'stability2 source checks passed'
 
       - name: Install Arduino CLI
         uses: arduino/setup-arduino-cli@v2
         with:
           version: "1.x"
 
-      - name: Configure ESP32 board manager
+      - name: Configure ESP32
         run: |
           arduino-cli config init --overwrite
           arduino-cli config add board_manager.additional_urls https://espressif.github.io/arduino-esp32/package_esp32_index.json
           arduino-cli core update-index
-
-      - name: Install ESP32 core 3.1.0
-        run: arduino-cli core install esp32:esp32@3.1.0
-
-      - name: Install libraries
-        run: |
+          arduino-cli core install esp32:esp32@3.1.0
           arduino-cli lib update-index
           arduino-cli lib install "GFX Library for Arduino@1.6.7"
           arduino-cli lib install "SensorLib@0.3.1"
@@ -117,28 +108,22 @@ jobs:
       - name: Compile basic firmware
         run: |
           rm -rf build_stable && mkdir build_stable
-          arduino-cli compile \
-            --fqbn "esp32:esp32:esp32s3:CDCOnBoot=cdc,FlashSize=16M,PSRAM=opi,PartitionScheme=app3M_fat9M_16MB" \
-            --build-path build_stable source/TamaPoke
+          arduino-cli compile --fqbn "esp32:esp32:esp32s3:CDCOnBoot=cdc,FlashSize=16M,PSRAM=opi,PartitionScheme=app3M_fat9M_16MB" --build-path build_stable source/TamaPoke
           test -f build_stable/TamaPoke.ino.bin
 
       - name: Compile alarm firmware
         run: |
           rm -rf build_alarm && mkdir build_alarm
-          arduino-cli compile \
-            --fqbn "esp32:esp32:esp32s3:CDCOnBoot=cdc,FlashSize=16M,PSRAM=opi,PartitionScheme=app3M_fat9M_16MB" \
-            --build-path build_alarm source_alarm/TamaPoke
+          arduino-cli compile --fqbn "esp32:esp32:esp32s3:CDCOnBoot=cdc,FlashSize=16M,PSRAM=opi,PartitionScheme=app3M_fat9M_16MB" --build-path build_alarm source_alarm/TamaPoke
           test -f build_alarm/TamaPoke.ino.bin
 
-      - name: Compile alarm + Cheonjiin firmware
+      - name: Compile alarm plus Cheonjiin firmware
         run: |
           rm -rf build_combo && mkdir build_combo
-          arduino-cli compile \
-            --fqbn "esp32:esp32:esp32s3:CDCOnBoot=cdc,FlashSize=16M,PSRAM=opi,PartitionScheme=app3M_fat9M_16MB" \
-            --build-path build_combo source_combo/TamaPoke
+          arduino-cli compile --fqbn "esp32:esp32:esp32s3:CDCOnBoot=cdc,FlashSize=16M,PSRAM=opi,PartitionScheme=app3M_fat9M_16MB" --build-path build_combo source_combo/TamaPoke
           test -f build_combo/TamaPoke.ino.bin
 
-      - name: Prepare three web installers
+      - name: Prepare web installers
         run: |
           set -e
           rm -rf site
@@ -150,31 +135,31 @@ jobs:
           STABLE=build_stable/TamaPoke.ino.bin
           SSHA=$(sha256sum "$STABLE" | awk '{print $1}')
           SSHORT=${SSHA:0:12}
-          SFW=tamapoke-ko-basic-stability1-${SSHORT}.bin
+          SFW=tamapoke-ko-basic-stability2-${SSHORT}.bin
           cp "$STABLE" "site/firmware/$SFW"
           cat > site/manifest.json <<EOF
-          {"name":"TamaPoke KO Basic","version":"1.4-ko-stability1-${SSHORT}","new_install_prompt_erase":true,"builds":[{"chipFamily":"ESP32-S3","parts":[{"path":"firmware/$SFW","offset":65536}]}]}
+          {"name":"TamaPoke KO Basic","version":"1.4-ko-stability2-${SSHORT}","new_install_prompt_erase":true,"builds":[{"chipFamily":"ESP32-S3","parts":[{"path":"firmware/$SFW","offset":65536}]}]}
           EOF
 
           ALARM=build_alarm/TamaPoke.ino.bin
           ASHA=$(sha256sum "$ALARM" | awk '{print $1}')
           ASHORT=${ASHA:0:12}
-          AFW=tamapoke-ko-alarm-stability1-${ASHORT}.bin
+          AFW=tamapoke-ko-alarm-stability2-${ASHORT}.bin
           cp "$ALARM" "site/firmware/$AFW"
           cat > site/manifest-alarm.json <<EOF
-          {"name":"TamaPoke KO Alarm","version":"1.5-ko-alarm1.1-stability1-${ASHORT}","new_install_prompt_erase":true,"builds":[{"chipFamily":"ESP32-S3","parts":[{"path":"firmware/$AFW","offset":65536}]}]}
+          {"name":"TamaPoke KO Alarm","version":"1.5-ko-alarm1.1-stability2-${ASHORT}","new_install_prompt_erase":true,"builds":[{"chipFamily":"ESP32-S3","parts":[{"path":"firmware/$AFW","offset":65536}]}]}
           EOF
 
           COMBO=build_combo/TamaPoke.ino.bin
           CSHA=$(sha256sum "$COMBO" | awk '{print $1}')
           CSHORT=${CSHA:0:12}
-          CFW=tamapoke-ko-alarm-cheonjiin-stability1-${CSHORT}.bin
+          CFW=tamapoke-ko-alarm-cheonjiin-stability2-${CSHORT}.bin
           cp "$COMBO" "site/firmware/$CFW"
           cat > site/manifest-combo.json <<EOF
-          {"name":"TamaPoke KO Alarm + Cheonjiin","version":"1.6-ko-combo1.1-stability1-${CSHORT}","new_install_prompt_erase":true,"builds":[{"chipFamily":"ESP32-S3","parts":[{"path":"firmware/$CFW","offset":65536}]}]}
+          {"name":"TamaPoke KO Alarm + Cheonjiin","version":"1.6-ko-combo1.1-stability2-${CSHORT}","new_install_prompt_erase":true,"builds":[{"chipFamily":"ESP32-S3","parts":[{"path":"firmware/$CFW","offset":65536}]}]}
           EOF
 
-          printf 'Basic SHA256: %s\nAlarm SHA256: %s\nAlarm+Cheonjiin SHA256: %s\nFlash offset: 0x10000\nStability1: Korean medal popup/badges fixed; sleep shows current time; alarm/combo manual sleep enters clock immediately and first standby gesture wakes/resumes; combo manual sleep overrides daytime walking scene.\n' "$SSHA" "$ASHA" "$CSHA" > site/build-info.txt
+          printf 'Basic SHA256: %s\nAlarm SHA256: %s\nAlarm+Cheonjiin SHA256: %s\nFlash offset: 0x10000\nStability2: medal Korean renderer fixed; sleep/game and clock UI separated; 30-second auto clock restored; PWR short toggles game/clock on alarm+combo; clock exit no longer wakes pet; sleep Zzz uses clean ASCII.\n' "$SSHA" "$ASHA" "$CSHA" > site/build-info.txt
 
       - name: Configure Pages
         uses: actions/configure-pages@v5
