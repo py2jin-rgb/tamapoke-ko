@@ -82,6 +82,12 @@ jobs:
           test -s source_combo/TamaPoke/hangul_full16.h
           echo 'combined test v1.1 source prepared'
 
+      - name: Export stability diagnostics
+        run: |
+          python3 combo_test/debug_stability.py \
+            source/TamaPoke source_alarm/TamaPoke source_combo/TamaPoke \
+            /tmp/stability-debug.txt
+
       - name: Install Arduino CLI
         uses: arduino/setup-arduino-cli@v2
         with:
@@ -135,6 +141,7 @@ jobs:
           cp docs/index.html site/index.html
           python3 combo_test/page_v11.py
           touch site/.nojekyll
+          cp /tmp/stability-debug.txt site/stability-debug.txt
 
           STABLE=build_stable/TamaPoke.ino.bin
           SSHA=$(sha256sum "$STABLE" | awk '{print $1}')
