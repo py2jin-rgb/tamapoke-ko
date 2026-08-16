@@ -47,7 +47,7 @@ jobs:
           print('stable Korean renderers patched')
           PY
 
-      - name: Prepare alarm test source
+      - name: Prepare alarm source
         run: |
           mkdir -p source_alarm
           cp -a source/TamaPoke source_alarm/TamaPoke
@@ -62,9 +62,9 @@ jobs:
           cd ../..
           python3 alarm_test/ui_fix_v11.py
           grep -q '1.5-ko-alarm1.1' source_alarm/TamaPoke/TamaPoke.ino
-          echo 'alarm test v1.1 patch applied'
+          echo 'alarm source prepared'
 
-      - name: Prepare combined alarm + Cheonjiin source
+      - name: Prepare alarm + Cheonjiin source
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y --no-install-recommends fonts-nanum python3-pil
@@ -80,13 +80,18 @@ jobs:
           grep -q 'char nick\[40\]' source_combo/TamaPoke/pet.h
           grep -q 'drawStandbyAwakePet' source_combo/TamaPoke/TamaPoke.ino
           test -s source_combo/TamaPoke/hangul_full16.h
-          echo 'combined test v1.1 source prepared'
+          echo 'combo source prepared'
 
-      - name: Export stability diagnostics
+      - name: Apply shared stability fixes
         run: |
-          python3 combo_test/debug_stability.py \
-            source/TamaPoke source_alarm/TamaPoke source_combo/TamaPoke \
-            /tmp/stability-debug.txt
+          python3 stability_fix_v12.py source/TamaPoke source_alarm/TamaPoke source_combo/TamaPoke
+          grep -q 'stability1' source/TamaPoke/TamaPoke.ino
+          grep -q 'stability1' source_alarm/TamaPoke/TamaPoke.ino
+          grep -q 'stability1' source_combo/TamaPoke/TamaPoke.ino
+          grep -q 'return pet.sleeping || millis() - lastInteract >= 30000UL;' source_alarm/TamaPoke/TamaPoke.ino
+          grep -q 'return pet.sleeping || millis() - lastInteract >= 30000UL;' source_combo/TamaPoke/TamaPoke.ino
+          grep -q 'const bool dayMode = !pet.sleeping' source_combo/TamaPoke/TamaPoke.ino
+          echo 'three stability sources verified'
 
       - name: Install Arduino CLI
         uses: arduino/setup-arduino-cli@v2
@@ -109,7 +114,7 @@ jobs:
           arduino-cli lib install "SensorLib@0.3.1"
           arduino-cli lib install "XPowersLib@0.2.6"
 
-      - name: Compile stable firmware
+      - name: Compile basic firmware
         run: |
           rm -rf build_stable && mkdir build_stable
           arduino-cli compile \
@@ -117,7 +122,7 @@ jobs:
             --build-path build_stable source/TamaPoke
           test -f build_stable/TamaPoke.ino.bin
 
-      - name: Compile alarm test firmware
+      - name: Compile alarm firmware
         run: |
           rm -rf build_alarm && mkdir build_alarm
           arduino-cli compile \
@@ -125,7 +130,7 @@ jobs:
             --build-path build_alarm source_alarm/TamaPoke
           test -f build_alarm/TamaPoke.ino.bin
 
-      - name: Compile combined Cheonjiin test firmware
+      - name: Compile alarm + Cheonjiin firmware
         run: |
           rm -rf build_combo && mkdir build_combo
           arduino-cli compile \
@@ -141,36 +146,35 @@ jobs:
           cp docs/index.html site/index.html
           python3 combo_test/page_v11.py
           touch site/.nojekyll
-          cp /tmp/stability-debug.txt site/stability-debug.txt
 
           STABLE=build_stable/TamaPoke.ino.bin
           SSHA=$(sha256sum "$STABLE" | awk '{print $1}')
           SSHORT=${SSHA:0:12}
-          SFW=tamapoke-ko-stable-textfix2-${SSHORT}.bin
+          SFW=tamapoke-ko-basic-stability1-${SSHORT}.bin
           cp "$STABLE" "site/firmware/$SFW"
           cat > site/manifest.json <<EOF
-          {"name":"TamaPoke KO Stable","version":"1.4-ko-clean1.2-textfix2-${SSHORT}","new_install_prompt_erase":true,"builds":[{"chipFamily":"ESP32-S3","parts":[{"path":"firmware/$SFW","offset":65536}]}]}
+          {"name":"TamaPoke KO Basic","version":"1.4-ko-stability1-${SSHORT}","new_install_prompt_erase":true,"builds":[{"chipFamily":"ESP32-S3","parts":[{"path":"firmware/$SFW","offset":65536}]}]}
           EOF
 
           ALARM=build_alarm/TamaPoke.ino.bin
           ASHA=$(sha256sum "$ALARM" | awk '{print $1}')
           ASHORT=${ASHA:0:12}
-          AFW=tamapoke-ko-alarm-test-v11-${ASHORT}.bin
+          AFW=tamapoke-ko-alarm-stability1-${ASHORT}.bin
           cp "$ALARM" "site/firmware/$AFW"
           cat > site/manifest-alarm.json <<EOF
-          {"name":"TamaPoke KO Alarm Test","version":"1.5-ko-alarm1.1-test-${ASHORT}","new_install_prompt_erase":true,"builds":[{"chipFamily":"ESP32-S3","parts":[{"path":"firmware/$AFW","offset":65536}]}]}
+          {"name":"TamaPoke KO Alarm","version":"1.5-ko-alarm1.1-stability1-${ASHORT}","new_install_prompt_erase":true,"builds":[{"chipFamily":"ESP32-S3","parts":[{"path":"firmware/$AFW","offset":65536}]}]}
           EOF
 
           COMBO=build_combo/TamaPoke.ino.bin
           CSHA=$(sha256sum "$COMBO" | awk '{print $1}')
           CSHORT=${CSHA:0:12}
-          CFW=tamapoke-ko-combo-cheonjiin-v11-${CSHORT}.bin
+          CFW=tamapoke-ko-alarm-cheonjiin-stability1-${CSHORT}.bin
           cp "$COMBO" "site/firmware/$CFW"
           cat > site/manifest-combo.json <<EOF
-          {"name":"TamaPoke KO Alarm + Cheonjiin Test","version":"1.6-ko-combo1.1-test-${CSHORT}","new_install_prompt_erase":true,"builds":[{"chipFamily":"ESP32-S3","parts":[{"path":"firmware/$CFW","offset":65536}]}]}
+          {"name":"TamaPoke KO Alarm + Cheonjiin","version":"1.6-ko-combo1.1-stability1-${CSHORT}","new_install_prompt_erase":true,"builds":[{"chipFamily":"ESP32-S3","parts":[{"path":"firmware/$CFW","offset":65536}]}]}
           EOF
 
-          printf 'Stable SHA256: %s\nAlarm-test SHA256: %s\nCombo-test SHA256: %s\nFlash offset: 0x10000\nCombo v1.1: stable fixes + alarm v1.1 + UTF-8 Cheonjiin nickname keyboard + full Hangul fallback + daytime sun/walking standby (06:00-19:59)\n' "$SSHA" "$ASHA" "$CSHA" > site/build-info.txt
+          printf 'Basic SHA256: %s\nAlarm SHA256: %s\nAlarm+Cheonjiin SHA256: %s\nFlash offset: 0x10000\nStability1: Korean medal popup/badges fixed; sleep shows current time; alarm/combo manual sleep enters clock immediately and first standby gesture wakes/resumes; combo manual sleep overrides daytime walking scene.\n' "$SSHA" "$ASHA" "$CSHA" > site/build-info.txt
 
       - name: Configure Pages
         uses: actions/configure-pages@v5
