@@ -105,6 +105,17 @@ jobs:
           grep -q 'gLang == LANG_KO ? 3 : 2' source_combo/TamaPoke/TamaPoke.ino
           echo 'combo date/font source checks passed'
 
+      - name: Add 151-level picture quiz to combo only
+        run: |
+          python3 combo_test/quiz151_v1.py source_combo/TamaPoke
+          grep -q '1.9-ko-combo-quiz151' source_combo/TamaPoke/TamaPoke.ino
+          grep -q 'void startQuiz151()' source_combo/TamaPoke/TamaPoke.ino
+          grep -q 'QUIZ151_ORDER\[151\]' source_combo/TamaPoke/TamaPoke.ino
+          grep -q '151 포켓몬 퀴즈' source_combo/TamaPoke/TamaPoke.ino
+          grep -q 'quizLv' source_combo/TamaPoke/pet.h
+          grep -q 'setQuizLevel' source_combo/TamaPoke/pet.cpp
+          echo 'combo quiz151 source checks passed'
+
       - name: Install Arduino CLI
         uses: arduino/setup-arduino-cli@v2
         with:
@@ -133,7 +144,7 @@ jobs:
           arduino-cli compile --fqbn "esp32:esp32:esp32s3:CDCOnBoot=cdc,FlashSize=16M,PSRAM=opi,PartitionScheme=app3M_fat9M_16MB" --build-path build_alarm source_alarm/TamaPoke
           test -f build_alarm/TamaPoke.ino.bin
 
-      - name: Compile alarm plus Cheonjiin games date-font firmware
+      - name: Compile alarm plus Cheonjiin games date-font quiz151 firmware
         run: |
           rm -rf build_combo && mkdir build_combo
           arduino-cli compile --fqbn "esp32:esp32:esp32s3:CDCOnBoot=cdc,FlashSize=16M,PSRAM=opi,PartitionScheme=app3M_fat9M_16MB" --build-path build_combo source_combo/TamaPoke
@@ -146,6 +157,7 @@ jobs:
           mkdir -p site/firmware
           cp docs/index.html site/index.html
           python3 combo_test/page_v11.py
+          python3 combo_test/page_quiz151.py
           touch site/.nojekyll
 
           STABLE=build_stable/TamaPoke.ino.bin
@@ -169,13 +181,13 @@ jobs:
           COMBO=build_combo/TamaPoke.ino.bin
           CSHA=$(sha256sum "$COMBO" | awk '{print $1}')
           CSHORT=${CSHA:0:12}
-          CFW=tamapoke-ko-alarm-cheonjiin-games1-datefont-${CSHORT}.bin
+          CFW=tamapoke-ko-alarm-cheonjiin-games-date-quiz151-${CSHORT}.bin
           cp "$COMBO" "site/firmware/$CFW"
           cat > site/manifest-combo.json <<EOF
-          {"name":"TamaPoke KO Alarm + Cheonjiin + Games + Date","version":"1.8-ko-combo-games1-datefont-${CSHORT}","new_install_prompt_erase":true,"builds":[{"chipFamily":"ESP32-S3","parts":[{"path":"firmware/$CFW","offset":65536}]}]}
+          {"name":"TamaPoke KO Alarm + Cheonjiin + Games + Date + Quiz151","version":"1.9-ko-combo-quiz151-${CSHORT}","new_install_prompt_erase":true,"builds":[{"chipFamily":"ESP32-S3","parts":[{"path":"firmware/$CFW","offset":65536}]}]}
           EOF
 
-          printf 'Basic SHA256: %s\nAlarm SHA256: %s\nCombo SHA256: %s\nFlash offset: 0x10000\nCombo 1.8: Games1 + larger safe Korean UI fonts + RTC year/month/day editor + larger standby date/weekday; Cheonjiin/alarm/PWR clock/minigame SFX retained.\n' "$SSHA" "$ASHA" "$CSHA" > site/build-info.txt
+          printf 'Basic SHA256: %s\nAlarm SHA256: %s\nCombo SHA256: %s\nFlash offset: 0x10000\nCombo 1.9: Quiz151 + Games1 + larger Korean UI fonts + RTC date editor; Cheonjiin/alarm/PWR clock/minigame SFX retained. Quiz progress is stored in NVS.\n' "$SSHA" "$ASHA" "$CSHA" > site/build-info.txt
 
       - name: Configure Pages
         uses: actions/configure-pages@v5
