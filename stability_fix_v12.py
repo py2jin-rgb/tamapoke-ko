@@ -35,7 +35,8 @@ def patch_common(root: Path) -> None:
             got ? UI_BG_DAY : 0x9492, 2);'''
     s = replace_once(s, old, new, f"{root}: medal badge renderer")
 
-    # Show the current RTC time immediately while the pet is sleeping.
+    # Keep the normal game screen simple while sleeping. Clock/time belongs to the
+    # dedicated clock view; use only native ASCII here to avoid garbled text.
     old = '''  if (pet.sleeping) {
     gfx->setTextColor(UI_INK_NIGHT);
     gfx->setTextSize(3);
@@ -43,69 +44,106 @@ def patch_common(root: Path) -> None:
     gfx->print("Zz");
   }'''
     new = '''  if (pet.sleeping) {
-    uint32_t sleepEpoch = rtcEpoch();
-    if (!sleepEpoch) sleepEpoch = pet.lastSeenEpoch;
-    char sleepTime[8];
-    if (sleepEpoch) snprintf(sleepTime, sizeof(sleepTime), "%02u:%02u",
-                             (unsigned)((sleepEpoch / 3600UL) % 24UL),
-                             (unsigned)((sleepEpoch / 60UL) % 60UL));
-    else snprintf(sleepTime, sizeof(sleepTime), "--:--");
-    uiPrintCenter(sleepTime, 76, UI_INK_NIGHT, 3);
     gfx->setTextColor(UI_INK_NIGHT);
-    gfx->setTextSize(3);
-    gfx->setCursor(320, 130);
-    gfx->print("Zz");
+    gfx->setTextSize(2);
+    gfx->setCursor(312, 132);
+    gfx->print("Zzz...");
   }'''
-    s = replace_once(s, old, new, f"{root}: sleeping clock overlay")
+    s = replace_once(s, old, new, f"{root}: clean sleeping text")
 
     # Make the on-device version distinguishable without changing save layout.
     m = re.search(r'#define FW_VERSION "([^"]+)"', s)
     if not m:
         raise SystemExit(f"{root}: FW_VERSION not found")
     current = m.group(1)
-    if not current.endswith("-stability1"):
-        s = s[:m.start(1)] + current + "-stability1" + s[m.end(1):]
+    if not current.endswith("-stability2"):
+        s = s[:m.start(1)] + current + "-stability2" + s[m.end(1):]
 
     p.write_text(s, encoding="utf-8")
-    print(f"common stability fixes applied: {root}")
+    print(f"common stability2 fixes applied: {root}")
 
 
 def patch_alarm_style(root: Path, combo: bool = False) -> None:
     p = root / "TamaPoke.ino"
     s = p.read_text(encoding="utf-8")
 
-    # Manual sleep should open the clock immediately instead of waiting 30 seconds.
-    old = '''  return millis() - lastInteract >= 30000UL;'''
-    new = '''  return pet.sleeping || millis() - lastInteract >= 30000UL;'''
-    s = replace_once(s, old, new, f"{root}: immediate sleep standby")
+    # Clock view is a UI state independent from pet.sleeping.
+    old = '''bool gestureFromStandby = false;'''
+    new = '''bool gestureFromStandby = false;
+bool manualClockView = false;  // PWR short press toggles game <-> clock view'''
+    s = replace_once(s, old, new, f"{root}: manual clock state")
 
-    # First gesture from a manually sleeping standby clock wakes the pet as it exits.
-    # This removes the confusing clock -> frozen-looking game -> separate Wake step.
+    # Automatic standby remains 30 seconds. Sleeping no longer forces the clock.
+    old = '''  return millis() - lastInteract >= 30000UL;'''
+    new = '''  return manualClockView || millis() - lastInteract >= 30000UL;'''
+    s = replace_once(s, old, new, f"{root}: independent standby clock")
+
+    # PWR short press: alarm stop keeps priority. On the normal home screen it
+    # toggles clock/game. During modal screens/minigames preserve the old screen
+    # off behavior so existing controls are not disrupted.
+    old = '''    if (pwrShortPressed()) {
+      if (alarmRinging()) {
+        alarmStop();
+        audioAlarmStop();
+        alarmNotice = 2;
+        alarmNoticeUntil = now + 3200;
+        screenOff = false;
+        lastInteract = now;
+      } else {
+        screenOff = !screenOff;
+        if (!screenOff) lastInteract = now;
+      }
+    }'''
+    new = '''    if (pwrShortPressed()) {
+      if (alarmRinging()) {
+        alarmStop();
+        audioAlarmStop();
+        alarmNotice = 2;
+        alarmNoticeUntil = now + 3200;
+        screenOff = false;
+        manualClockView = false;
+        lastInteract = now;
+      } else {
+        const bool modalOpen = alarmNotice || clockOpen || gameOpen || sackOpen ||
+          galleryOpen || kbOpen || cardOpen || pet.awaitingStarter() || pet.ceremony ||
+          confirmUntil || choiceKind || feedMenuUntil || bathUntil;
+        if (modalOpen) {
+          screenOff = !screenOff;
+          if (!screenOff) lastInteract = now;
+        } else {
+          screenOff = false;
+          manualClockView = !manualClockView;
+          lastInteract = now;
+        }
+      }
+    }'''
+    s = replace_once(s, old, new, f"{root}: PWR clock toggle")
+
+    # Leaving the clock view must never change the pet's sleep state. A tap exits
+    # the clock; downward swipe still opens clock/alarm settings as before.
     old = '''    if (!holdFired && gestureFromStandby) {
       // 대기 시계에서 첫 탭은 해제만. 아래 스와이프만 설정 화면으로 진입.
       if (abs(dy) > 80 && abs(dx) < 70 && dt < 800 && dy > 0) openClock();
       gestureFromStandby = false;
     } else if (!holdFired && !swallowGesture) {'''
     new = '''    if (!holdFired && gestureFromStandby) {
-      // First interaction leaves standby. If standby came from manual sleep,
-      // wake the pet at the same time so gameplay resumes without a second tap.
-      const bool wakeFromSleep = pet.sleeping;
+      // Clock view and sleep state are independent. Exit the clock without waking.
       if (abs(dy) > 80 && abs(dx) < 70 && dt < 800 && dy > 0) openClock();
-      if (wakeFromSleep) pet.toggleLight();
+      manualClockView = false;
       gestureFromStandby = false;
       swallowGesture = false;
     } else if (!holdFired && !swallowGesture) {'''
-    s = replace_once(s, old, new, f"{root}: wake on standby exit")
+    s = replace_once(s, old, new, f"{root}: clock exit without wake")
 
     if combo:
-        # The combo daytime standby normally shows a walking pet. Manual sleep must
-        # always use the night/sleep visual even if the real clock says daytime.
+        # Day/night standby still follows RTC while awake. If the pet itself is
+        # sleeping, show the sleeping/night visual even during daytime.
         old = '''  const bool dayMode = (tmv.tm_hour >= 6 && tmv.tm_hour < 20);'''
         new = '''  const bool dayMode = !pet.sleeping && (tmv.tm_hour >= 6 && tmv.tm_hour < 20);'''
-        s = replace_once(s, old, new, f"{root}: manual sleep overrides daytime standby")
+        s = replace_once(s, old, new, f"{root}: sleeping pet clock visual")
 
     p.write_text(s, encoding="utf-8")
-    print(f"alarm-style stability fixes applied: {root}")
+    print(f"alarm-style stability2 fixes applied: {root}")
 
 
 def main() -> None:
@@ -116,7 +154,7 @@ def main() -> None:
         patch_common(root)
     patch_alarm_style(alarm, combo=False)
     patch_alarm_style(combo, combo=True)
-    print("ALL stability fixes applied")
+    print("ALL stability2 fixes applied")
 
 
 if __name__ == "__main__":
