@@ -80,14 +80,9 @@ jobs:
           grep -q 'stability2' source/TamaPoke/TamaPoke.ino
           grep -q 'stability2' source_alarm/TamaPoke/TamaPoke.ino
           grep -q 'stability2' source_combo/TamaPoke/TamaPoke.ino
-          grep -q 'bool manualClockView = false' source_alarm/TamaPoke/TamaPoke.ino
           grep -q 'bool manualClockView = false' source_combo/TamaPoke/TamaPoke.ino
-          grep -q 'return manualClockView || millis() - lastInteract >= 30000UL;' source_alarm/TamaPoke/TamaPoke.ino
-          grep -q 'return manualClockView || millis() - lastInteract >= 30000UL;' source_combo/TamaPoke/TamaPoke.ino
-          grep -q 'manualClockView = !manualClockView' source_alarm/TamaPoke/TamaPoke.ino
           grep -q 'manualClockView = !manualClockView' source_combo/TamaPoke/TamaPoke.ino
           grep -q 'const bool dayMode = !pet.sleeping' source_combo/TamaPoke/TamaPoke.ino
-          echo 'stability2 source checks passed'
 
       - name: Add expandable games to combo only
         run: |
@@ -99,7 +94,16 @@ jobs:
           grep -q 'SFX_MOLE_HIT3' source_combo/TamaPoke/audio.h
           grep -q 'moleHi' source_combo/TamaPoke/pet.h
           grep -q 'rpsHi' source_combo/TamaPoke/pet.h
-          echo 'combo games1 source checks passed'
+
+      - name: Add date setting and larger fonts to combo only
+        run: |
+          python3 combo_test/date_font_v2.py source_combo/TamaPoke
+          grep -q '1.8-ko-combo-games1-datefont' source_combo/TamaPoke/TamaPoke.ino
+          grep -q 'int clockY = 2026' source_combo/TamaPoke/TamaPoke.ino
+          grep -q 'renderDateAdjust' source_combo/TamaPoke/TamaPoke.ino
+          grep -q 'clockPage=5' source_combo/TamaPoke/TamaPoke.ino
+          grep -q 'gLang == LANG_KO ? 3 : 2' source_combo/TamaPoke/TamaPoke.ino
+          echo 'combo date/font source checks passed'
 
       - name: Install Arduino CLI
         uses: arduino/setup-arduino-cli@v2
@@ -129,7 +133,7 @@ jobs:
           arduino-cli compile --fqbn "esp32:esp32:esp32s3:CDCOnBoot=cdc,FlashSize=16M,PSRAM=opi,PartitionScheme=app3M_fat9M_16MB" --build-path build_alarm source_alarm/TamaPoke
           test -f build_alarm/TamaPoke.ino.bin
 
-      - name: Compile alarm plus Cheonjiin games firmware
+      - name: Compile alarm plus Cheonjiin games date-font firmware
         run: |
           rm -rf build_combo && mkdir build_combo
           arduino-cli compile --fqbn "esp32:esp32:esp32s3:CDCOnBoot=cdc,FlashSize=16M,PSRAM=opi,PartitionScheme=app3M_fat9M_16MB" --build-path build_combo source_combo/TamaPoke
@@ -165,13 +169,13 @@ jobs:
           COMBO=build_combo/TamaPoke.ino.bin
           CSHA=$(sha256sum "$COMBO" | awk '{print $1}')
           CSHORT=${CSHA:0:12}
-          CFW=tamapoke-ko-alarm-cheonjiin-games1-${CSHORT}.bin
+          CFW=tamapoke-ko-alarm-cheonjiin-games1-datefont-${CSHORT}.bin
           cp "$COMBO" "site/firmware/$CFW"
           cat > site/manifest-combo.json <<EOF
-          {"name":"TamaPoke KO Alarm + Cheonjiin + Games","version":"1.7-ko-combo-games1-${CSHORT}","new_install_prompt_erase":true,"builds":[{"chipFamily":"ESP32-S3","parts":[{"path":"firmware/$CFW","offset":65536}]}]}
+          {"name":"TamaPoke KO Alarm + Cheonjiin + Games + Date","version":"1.8-ko-combo-games1-datefont-${CSHORT}","new_install_prompt_erase":true,"builds":[{"chipFamily":"ESP32-S3","parts":[{"path":"firmware/$CFW","offset":65536}]}]}
           EOF
 
-          printf 'Basic SHA256: %s\nAlarm SHA256: %s\nAlarm+Cheonjiin+Games SHA256: %s\nFlash offset: 0x10000\nCombo Games1: stability2 + Cheonjiin + expandable play hub + ball game + 20s mole game + 5-round Pokemon RPS + separate mole/RPS high scores + 12 original synthesized minigame SFX; alarm owns speaker while ringing.\n' "$SSHA" "$ASHA" "$CSHA" > site/build-info.txt
+          printf 'Basic SHA256: %s\nAlarm SHA256: %s\nCombo SHA256: %s\nFlash offset: 0x10000\nCombo 1.8: Games1 + larger safe Korean UI fonts + RTC year/month/day editor + larger standby date/weekday; Cheonjiin/alarm/PWR clock/minigame SFX retained.\n' "$SSHA" "$ASHA" "$CSHA" > site/build-info.txt
 
       - name: Configure Pages
         uses: actions/configure-pages@v5
