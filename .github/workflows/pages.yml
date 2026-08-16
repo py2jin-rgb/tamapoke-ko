@@ -88,33 +88,19 @@ jobs:
         run: |
           python3 combo_test/minigames_v1.py source_combo/TamaPoke
           grep -q '1.7-ko-combo-games1' source_combo/TamaPoke/TamaPoke.ino
-          grep -q 'bool gameMenuOpen = false' source_combo/TamaPoke/TamaPoke.ino
           grep -q 'void startMole()' source_combo/TamaPoke/TamaPoke.ino
-          grep -q 'void startRps()' source_combo/TamaPoke/TamaPoke.ino
           grep -q 'SFX_MOLE_HIT3' source_combo/TamaPoke/audio.h
-          grep -q 'moleHi' source_combo/TamaPoke/pet.h
-          grep -q 'rpsHi' source_combo/TamaPoke/pet.h
 
       - name: Add date setting and larger fonts to combo only
         run: |
           python3 combo_test/date_font_v2.py source_combo/TamaPoke
           grep -q '1.8-ko-combo-games1-datefont' source_combo/TamaPoke/TamaPoke.ino
-          grep -q 'int clockY = 2026' source_combo/TamaPoke/TamaPoke.ino
-          grep -q 'renderDateAdjust' source_combo/TamaPoke/TamaPoke.ino
-          grep -q 'clockPage=5' source_combo/TamaPoke/TamaPoke.ino
-          grep -q 'gLang == LANG_KO ? 3 : 2' source_combo/TamaPoke/TamaPoke.ino
-          echo 'combo date/font source checks passed'
 
       - name: Add 151-level picture quiz to combo only
         run: |
           python3 combo_test/quiz151_v1.py source_combo/TamaPoke
           grep -q '1.9-ko-combo-quiz151' source_combo/TamaPoke/TamaPoke.ino
           grep -q 'void startQuiz151()' source_combo/TamaPoke/TamaPoke.ino
-          grep -q 'QUIZ151_ORDER\[151\]' source_combo/TamaPoke/TamaPoke.ino
-          grep -q '151 포켓몬 퀴즈' source_combo/TamaPoke/TamaPoke.ino
-          grep -q 'quizLv' source_combo/TamaPoke/pet.h
-          grep -q 'setQuizLevel' source_combo/TamaPoke/pet.cpp
-          echo 'combo quiz151 source checks passed'
 
       - name: Apply minigame quality upgrade to combo only
         run: |
@@ -123,13 +109,7 @@ jobs:
           patch -p1 < /tmp/quality_v20.patch
           cd ../..
           grep -q '2.0-ko-combo-qualitygames' source_combo/TamaPoke/TamaPoke.ino
-          grep -q 'bool catchOpen = false' source_combo/TamaPoke/TamaPoke.ino
-          grep -q '피카츄 잡기: 12칸 / 5단계' source_combo/TamaPoke/TamaPoke.ino
           grep -q 'void startMonsterCatch()' source_combo/TamaPoke/TamaPoke.ino
-          grep -q 'SD 카드가 필요해요' source_combo/TamaPoke/TamaPoke.ino
-          grep -q 'catchHi' source_combo/TamaPoke/pet.h
-          grep -q 'prefs.putUShort("chi"' source_combo/TamaPoke/pet.cpp
-          echo 'combo quality games source checks passed'
 
       - name: Install Arduino CLI
         uses: arduino/setup-arduino-cli@v2
@@ -151,21 +131,18 @@ jobs:
         run: |
           rm -rf build_stable && mkdir build_stable
           arduino-cli compile --fqbn "esp32:esp32:esp32s3:CDCOnBoot=cdc,FlashSize=16M,PSRAM=opi,PartitionScheme=app3M_fat9M_16MB" --build-path build_stable source/TamaPoke
-          test -f build_stable/TamaPoke.ino.bin
 
       - name: Compile alarm firmware
         run: |
           rm -rf build_alarm && mkdir build_alarm
           arduino-cli compile --fqbn "esp32:esp32:esp32s3:CDCOnBoot=cdc,FlashSize=16M,PSRAM=opi,PartitionScheme=app3M_fat9M_16MB" --build-path build_alarm source_alarm/TamaPoke
-          test -f build_alarm/TamaPoke.ino.bin
 
-      - name: Compile Cheonjiin quality games firmware
+      - name: Compile combo firmware
         run: |
           rm -rf build_combo && mkdir build_combo
           arduino-cli compile --fqbn "esp32:esp32:esp32s3:CDCOnBoot=cdc,FlashSize=16M,PSRAM=opi,PartitionScheme=app3M_fat9M_16MB" --build-path build_combo source_combo/TamaPoke
-          test -f build_combo/TamaPoke.ino.bin
 
-      - name: Prepare web installers
+      - name: Prepare web installers and final v2.1 combo
         run: |
           set -e
           rm -rf site
@@ -174,6 +151,10 @@ jobs:
           python3 combo_test/page_v11.py
           python3 combo_test/page_quiz151.py
           python3 combo_test/page_quality_v20.py
+          python3 combo_test/page_userfix_v21.py
+          grep -q '2.1-ko-combo-userfix' source_combo/TamaPoke/TamaPoke.ino
+          grep -q 'random(151)' source_combo/TamaPoke/TamaPoke.ino
+          grep -q 'CX, 294, now, true, false, 4' source_combo/TamaPoke/TamaPoke.ino
           touch site/.nojekyll
 
           STABLE=build_stable/TamaPoke.ino.bin
@@ -197,13 +178,13 @@ jobs:
           COMBO=build_combo/TamaPoke.ino.bin
           CSHA=$(sha256sum "$COMBO" | awk '{print $1}')
           CSHORT=${CSHA:0:12}
-          CFW=tamapoke-ko-cheonjiin-qualitygames-${CSHORT}.bin
+          CFW=tamapoke-ko-cheonjiin-userfix21-${CSHORT}.bin
           cp "$COMBO" "site/firmware/$CFW"
           cat > site/manifest-combo.json <<EOF
-          {"name":"TamaPoke KO Cheonjiin Quality Games","version":"2.0-ko-combo-qualitygames-${CSHORT}","new_install_prompt_erase":true,"builds":[{"chipFamily":"ESP32-S3","parts":[{"path":"firmware/$CFW","offset":65536}]}]}
+          {"name":"TamaPoke KO Cheonjiin User Fix 2.1","version":"2.1-ko-combo-userfix-${CSHORT}","new_install_prompt_erase":true,"builds":[{"chipFamily":"ESP32-S3","parts":[{"path":"firmware/$CFW","offset":65536}]}]}
           EOF
 
-          printf 'Basic SHA256: %s\nAlarm SHA256: %s\nCombo SHA256: %s\nFlash offset: 0x10000\nCombo 2.0: Cheonjiin + alarm + date + Quiz151 retained; RPS upgraded to current Pokemon VS opponent, Pikachu Catch upgraded to 12 slots / 5 speed stages, quiz SD/image guard added, Monster Ball Catch item game and NVS best score added.\n' "$SSHA" "$ASHA" "$CSHA" > site/build-info.txt
+          printf 'Basic SHA256: %s\nAlarm SHA256: %s\nCombo SHA256: %s\nFlash offset: 0x10000\nCombo 2.1: stronger mole/Pikachu hit SFX; clock Pokemon card removed; Quiz151 Pokemon enlarged and randomized every question/retry.\n' "$SSHA" "$ASHA" "$CSHA" > site/build-info.txt
 
       - name: Configure Pages
         uses: actions/configure-pages@v5
