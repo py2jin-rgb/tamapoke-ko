@@ -47,14 +47,9 @@ jobs:
           python3 combo_test/quiz151_v1.py source_combo/TamaPoke
           cat combo_test/quality_v20_01.b64 combo_test/quality_v20_02.b64 combo_test/quality_v20_03.b64 | tr -d '\r\n' | base64 -d | gzip -dc > /tmp/quality_v20.patch
           cd source_combo/TamaPoke && patch -p1 < /tmp/quality_v20.patch && cd ../..
-      - name: Show target sections
-        run: |
-          P=source_combo/TamaPoke/TamaPoke.ino
-          echo '=== DRAW BARS ==='
-          grep -n -A28 -B3 'void drawBars()' "$P"
-          echo '=== MOLE GLOBALS ==='
-          grep -n -A24 -B6 'moleStage' "$P" | head -120
-          echo '=== MOLE START ==='
-          grep -n -A170 -B10 'void startMole()' "$P" | head -210
-          echo '=== QUIZ TAP ==='
-          grep -n -A95 -B12 'void quiz151Tap' "$P" | head -130
+      - name: Upload current 2.0 source
+        uses: actions/upload-artifact@v4
+        with:
+          name: combo-source-2.0
+          path: source_combo/TamaPoke
+          retention-days: 1
