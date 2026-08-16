@@ -1,0 +1,60 @@
+name: Export prepared combo source
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/export-combo-source.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Prepare combo stability2 source
+        run: |
+          rm -rf source source_alarm source_combo
+          mkdir -p source
+          unzip -q source_package.zip -d source
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          p=Path('source/TamaPoke/TamaPoke.ino')
+          s=p.read_text(encoding='utf-8')
+          pats=[
+            (r'gfx->setTextColor\(ink\);\s*gfx->setCursor\(CX - strlen\(rec\) \* 6, 214\);\s*gfx->print\(rec\);','uiPrintCenter(rec, 214, ink, 2);'),
+            (r'gfx->setTextSize\(2\);\s*gfx->setCursor\(CX - strlen\(rec\) \* 6, 76\);\s*gfx->print\(rec\);','uiPrintCenter(rec, 76, ink, 2);'),
+            (r'gfx->setTextColor\(ink\);\s*gfx->setCursor\(CX - strlen\(r\) \* 6, 256\);\s*gfx->print\(r\);','uiPrintCenter(r, 256, ink, 2);'),
+          ]
+          for pat,repl in pats:
+            s,n=re.subn(pat,repl,s,count=1)
+            if n!=1: raise SystemExit('stable renderer patch mismatch')
+          p.write_text(s,encoding='utf-8')
+          PY
+          mkdir -p source_alarm
+          cp -a source/TamaPoke source_alarm/TamaPoke
+          cat alarm_test/patch_01.b64 alarm_test/patch_02.b64 alarm_test/patch_03.b64 alarm_test/patch_04.b64 | tr -d '\r\n' | base64 -d | gzip -dc > /tmp/alarm.patch
+          cd source_alarm/TamaPoke
+          patch -p1 < /tmp/alarm.patch
+          cd ../..
+          python3 alarm_test/ui_fix_v11.py
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends fonts-nanum python3-pil
+          mkdir -p source_combo
+          cp -a source_alarm/TamaPoke source_combo/TamaPoke
+          cp combo_test/hangul_cheonjiin.h source_combo/TamaPoke/hangul_cheonjiin.h
+          python3 combo_test/gen_hangul_font.py source_combo/TamaPoke/hangul_full16.h
+          cd source_combo/TamaPoke
+          patch -p1 < ../../combo_test/keyboard.patch
+          cd ../..
+          python3 combo_test/day_standby_v11.py
+          python3 stability_fix_v12.py source/TamaPoke source_alarm/TamaPoke source_combo/TamaPoke
+          grep -q 'stability2' source_combo/TamaPoke/TamaPoke.ino
+      - uses: actions/upload-artifact@v4
+        with:
+          name: combo-stability2-source
+          path: source_combo/TamaPoke
