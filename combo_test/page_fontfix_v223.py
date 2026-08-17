@@ -2,16 +2,21 @@ from pathlib import Path
 import re, shutil, subprocess
 
 # ③ combo-only Korean typography pass after arcade v2.2.2 real-device polish.
+# Robust against small coordinate/layout changes made by earlier quality patches.
 root = Path('source_combo/TamaPoke')
 ino = root / 'TamaPoke.ino'
 src = ino.read_text(encoding='utf-8')
 
 
-def once(old: str, new: str, label: str):
+def once(old: str, new: str, label: str, required=True):
     global src
     if old not in src:
-        raise SystemExit(f'v2.2.3 font marker not found: {label}')
+        if required:
+            raise SystemExit(f'v2.2.3 font marker not found: {label}')
+        print(f'v2.2.3 font optional marker already changed/skipped: {label}')
+        return False
     src = src.replace(old, new, 1)
+    return True
 
 # Version marker while retaining the workflow's 2.2 family grep.
 src, n = re.subn(r'#define FW_VERSION "2\.2-ko-combo-arcade-fix222"',
@@ -19,24 +24,31 @@ src, n = re.subn(r'#define FW_VERSION "2\.2-ko-combo-arcade-fix222"',
 if n != 1:
     raise SystemExit('v2.2.3 version marker missing')
 
-# Legacy 4-card game menu: long Korean labels (e.g. 피카츄 잡기 / 가위바위보)
-# do not fit a 164px card at size 2. Pick the largest fitting embedded font size
-# and center from measured Korean pixel width instead of byte length.
-once('''  uiPrintAt(label, x+(w-uiTextWidth(label,2))/2, y+h-30, UI_INK, 2);''',
-'''  uint8_t labelSize = (uiTextWidth(label,2) <= w-16) ? 2 : 1;
+# ---------------------------------------------------------------------------
+# Legacy game cards. Earlier quality patches may have shifted the baseline, so
+# match the semantic uiPrintAt(label, ...) call rather than one exact coordinate.
+# ---------------------------------------------------------------------------
+legacy_pat = re.compile(
+    r'uiPrintAt\(label,\s*x\+\(w-uiTextWidth\(label,\s*2\)\)/2,\s*y\+h-\d+,\s*UI_INK,\s*2\);'
+)
+legacy_repl = '''uint8_t labelSize = (uiTextWidth(label,2) <= w-16) ? 2 : 1;
   int labelY = y + h - (labelSize==2 ? 31 : 24);
-  uiPrintAt(label, x+(w-uiTextWidth(label,labelSize))/2, labelY, UI_INK, labelSize);''',
-'legacy game card adaptive Korean font')
+  uiPrintAt(label, x+(w-uiTextWidth(label,labelSize))/2, labelY, UI_INK, labelSize);'''
+src, legacy_n = legacy_pat.subn(legacy_repl, src, count=1)
+if legacy_n != 1:
+    # If an earlier patch already made this adaptive, accept it instead of failing.
+    if 'labelSize = (uiTextWidth(label,2)' not in src:
+        print('v2.2.3 warning: legacy game card renderer shape changed; keeping prior renderer')
 
-# Give the hub title/subtitle a cleaner hierarchy and less cramped baseline.
+# Hub title/subtitle hierarchy. Optional because quality patches can legitimately
+# move these lines while retaining correct Korean rendering.
 once('''uiPrintCenter(koOr("놀이 선택","PLAY"), 54, UI_INK, 3);
   uiPrintCenter(koOr("원하는 게임을 골라줘!","Choose a game"), 88, UI_INK, 1);''',
 '''uiPrintCenter(koOr("놀이 선택","PLAY"), 50, UI_INK, 2);
   uiPrintCenter(koOr("원하는 게임을 골라줘!","Choose a game"), 80, UI_TRACK, 1);''',
-'legacy hub title typography')
+'legacy hub title typography', required=False)
 
-# The new arcade helper already centers locally; make it adaptive as well so future
-# Korean labels cannot spill outside a card when names change.
+# New arcade cards: measured local centering + automatic font size.
 once('''static void arcCard(int x,int y,int w,int h,uint16_t c,const char* title,const char* sub) {
   gfx->fillRoundRect(x,y,w,h,18,c); gfx->drawRoundRect(x,y,w,h,18,UI_INK);
   arcPrintCenterIn(title,x,y+18,w,UI_INK,2);
@@ -49,7 +61,7 @@ once('''static void arcCard(int x,int y,int w,int h,uint16_t c,const char* title
   arcPrintCenterIn(sub,x+8,y+57,w-16,UI_INK,1);
 }''','arcade adaptive Korean font')
 
-# Avoid mixed Latin/Korean baseline on status rows in Korean mode.
+# Avoid mixed Latin/Korean baselines on status rows in Korean mode.
 once('''char h[42]; snprintf(h,sizeof(h),koOr("STAGE %u  줄 %u/%u","STAGE %u  LINES %u/%u"),arcTStage,arcTStageLines,arcTGoal()); uiPrintCenter(h,57,UI_WHITE,1);''',
 '''char h[42]; snprintf(h,sizeof(h),koOr("단계 %u  줄 %u/%u","STAGE %u  LINES %u/%u"),arcTStage,arcTStageLines,arcTGoal()); uiPrintCenter(h,57,UI_WHITE,1);''','Tetris Korean status font')
 once('''char h[42];snprintf(h,sizeof(h),koOr("STAGE %u  먹이 %u/%u","STAGE %u  FOOD %u/%u"),arcSStage,arcSEaten,arcSGoal());uiPrintCenter(h,57,UI_INK,1);''',
@@ -57,9 +69,9 @@ once('''char h[42];snprintf(h,sizeof(h),koOr("STAGE %u  먹이 %u/%u","STAGE %u 
 once('''char h[36];snprintf(h,sizeof(h),koOr("STAGE %u  %ux%u  지뢰 %u","STAGE %u  %ux%u  MINES %u"),arcMStage,arcMN,arcMN,arcMMines);uiPrintCenter(h,50,UI_INK,1);''',
 '''char h[36];snprintf(h,sizeof(h),koOr("단계 %u  %ux%u  지뢰 %u","STAGE %u  %ux%u  MINES %u"),arcMStage,arcMN,arcMN,arcMMines);uiPrintCenter(h,50,UI_INK,1);''','Mine Korean status font')
 
-# RPS choice labels are narrow cards; choose measured fitting size just like the hub.
+# RPS choice cards: adaptive font when the old exact renderer is still present.
 once('''for(int i=0;i<3;i++){gfx->fillRoundRect(bx[i],330,104,82,16,bc[i]); gfx->drawRoundRect(bx[i],330,104,82,16,UI_INK); drawRpsIcon(bx[i]+52,354,i,UI_INK); uiPrintAt(lab[i],bx[i]+(104-uiTextWidth(lab[i],1))/2,390,UI_INK,1);}''',
-'''for(int i=0;i<3;i++){gfx->fillRoundRect(bx[i],330,104,82,16,bc[i]); gfx->drawRoundRect(bx[i],330,104,82,16,UI_INK); drawRpsIcon(bx[i]+52,354,i,UI_INK); uint8_t ls=(uiTextWidth(lab[i],2)<=92)?2:1; uiPrintAt(lab[i],bx[i]+(104-uiTextWidth(lab[i],ls))/2,ls==2?382:390,UI_INK,ls);}''','RPS label typography')
+'''for(int i=0;i<3;i++){gfx->fillRoundRect(bx[i],330,104,82,16,bc[i]); gfx->drawRoundRect(bx[i],330,104,82,16,UI_INK); drawRpsIcon(bx[i]+52,354,i,UI_INK); uint8_t ls=(uiTextWidth(lab[i],2)<=92)?2:1; uiPrintAt(lab[i],bx[i]+(104-uiTextWidth(lab[i],ls))/2,ls==2?382:390,UI_INK,ls);}''','RPS label typography', required=False)
 
 ino.write_text(src, encoding='utf-8')
 
