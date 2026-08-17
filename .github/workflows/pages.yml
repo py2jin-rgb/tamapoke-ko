@@ -149,13 +149,15 @@ jobs:
           python3 combo_test/page_userfix_v21.py
           python3 alarm_test/living_clock_v23.py
           python3 alarm_test/living_clock_finish_v24.py
+          python3 alarm_test/living_clock_final_v25.py
           grep -q '2.2-ko-combo-arcade' source_combo/TamaPoke/TamaPoke.ino
           grep -q 'arcRenderTetris' source_combo/TamaPoke/TamaPoke.ino
           grep -q 'arcRenderSnake' source_combo/TamaPoke/TamaPoke.ino
           grep -q 'arcRenderMine' source_combo/TamaPoke/TamaPoke.ino
-          grep -q '1.8-ko-livingclock-cleanclock' source_alarm/TamaPoke/TamaPoke.ino
+          grep -q '1.9-ko-livingclock-final' source_alarm/TamaPoke/TamaPoke.ino
           grep -q 'livingPartOfDay' source_alarm/TamaPoke/TamaPoke.ino
-          if grep -q 'livingBubble' source_alarm/TamaPoke/TamaPoke.ino; then echo 'speech bubble renderer unexpectedly present'; exit 1; fi
+          if grep -q '좋은 하루' source_alarm/TamaPoke/TamaPoke.ino; then echo 'residual idle bubble text unexpectedly present'; exit 1; fi
+          if grep -q 'fillRoundRect(300, 307, 74, 31' source_alarm/TamaPoke/TamaPoke.ino; then echo 'residual white idle rectangle unexpectedly present'; exit 1; fi
           test -f build_combo/TamaPoke.ino.bin
           test -f build_alarm/TamaPoke.ino.bin
           touch site/.nojekyll
@@ -172,10 +174,10 @@ jobs:
           ALARM=build_alarm/TamaPoke.ino.bin
           ASHA=$(sha256sum "$ALARM" | awk '{print $1}')
           ASHORT=${ASHA:0:12}
-          AFW=tamapoke-ko-alarm-livingclock-clean18-${ASHORT}.bin
+          AFW=tamapoke-ko-alarm-livingclock-final19-${ASHORT}.bin
           cp "$ALARM" "site/firmware/$AFW"
           cat > site/manifest-alarm.json <<EOF
-          {"name":"TamaPoke KO Living Clock Clean Clock","version":"1.8-ko-livingclock-cleanclock-${ASHORT}","new_install_prompt_erase":true,"builds":[{"chipFamily":"ESP32-S3","parts":[{"path":"firmware/$AFW","offset":65536}]}]}
+          {"name":"TamaPoke KO Living Clock Final 1.9","version":"1.9-ko-livingclock-final-${ASHORT}","new_install_prompt_erase":true,"builds":[{"chipFamily":"ESP32-S3","parts":[{"path":"firmware/$AFW","offset":65536}]}]}
           EOF
 
           COMBO=build_combo/TamaPoke.ino.bin
@@ -187,7 +189,7 @@ jobs:
           {"name":"TamaPoke KO Cheonjiin Arcade 2.2","version":"2.2-ko-combo-arcade-${CSHORT}","new_install_prompt_erase":true,"builds":[{"chipFamily":"ESP32-S3","parts":[{"path":"firmware/$CFW","offset":65536}]}]}
           EOF
 
-          printf 'Basic SHA256: %s\nLiving Clock Clean Clock SHA256: %s\nCombo SHA256: %s\nFlash offset: 0x10000\nAlarm-only Living Clock 1.8: speech bubbles removed, large clock hierarchy, date/weekday aligned, lower Pokemon scene, slim battery/alarm status rail. Combo remains Arcade 2.2.3 family.\n' "$SSHA" "$ASHA" "$CSHA" > site/build-info.txt
+          printf 'Basic SHA256: %s\nLiving Clock Final 1.9 SHA256: %s\nCombo SHA256: %s\nFlash offset: 0x10000\nAlarm-only Living Clock 1.9: residual white idle bubble removed, double watch rim, large clock hierarchy, aligned date/weekday, slimmer lower battery/alarm rail, anchored Pokemon scene.\n' "$SSHA" "$ASHA" "$CSHA" > site/build-info.txt
 
       - name: Configure Pages
         uses: actions/configure-pages@v5
