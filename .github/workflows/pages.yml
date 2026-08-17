@@ -153,9 +153,9 @@ jobs:
           grep -q 'arcRenderTetris' source_combo/TamaPoke/TamaPoke.ino
           grep -q 'arcRenderSnake' source_combo/TamaPoke/TamaPoke.ino
           grep -q 'arcRenderMine' source_combo/TamaPoke/TamaPoke.ino
-          grep -q '1.7-ko-livingclock-cute-final' source_alarm/TamaPoke/TamaPoke.ino
+          grep -q '1.8-ko-livingclock-cleanclock' source_alarm/TamaPoke/TamaPoke.ino
           grep -q 'livingPartOfDay' source_alarm/TamaPoke/TamaPoke.ino
-          grep -q 'livingBubble' source_alarm/TamaPoke/TamaPoke.ino
+          if grep -q 'livingBubble' source_alarm/TamaPoke/TamaPoke.ino; then echo 'speech bubble renderer unexpectedly present'; exit 1; fi
           test -f build_combo/TamaPoke.ino.bin
           test -f build_alarm/TamaPoke.ino.bin
           touch site/.nojekyll
@@ -172,10 +172,10 @@ jobs:
           ALARM=build_alarm/TamaPoke.ino.bin
           ASHA=$(sha256sum "$ALARM" | awk '{print $1}')
           ASHORT=${ASHA:0:12}
-          AFW=tamapoke-ko-alarm-livingclock-cute-final-${ASHORT}.bin
+          AFW=tamapoke-ko-alarm-livingclock-clean18-${ASHORT}.bin
           cp "$ALARM" "site/firmware/$AFW"
           cat > site/manifest-alarm.json <<EOF
-          {"name":"TamaPoke KO Living Clock Cute Final","version":"1.7-ko-livingclock-cute-final-${ASHORT}","new_install_prompt_erase":true,"builds":[{"chipFamily":"ESP32-S3","parts":[{"path":"firmware/$AFW","offset":65536}]}]}
+          {"name":"TamaPoke KO Living Clock Clean Clock","version":"1.8-ko-livingclock-cleanclock-${ASHORT}","new_install_prompt_erase":true,"builds":[{"chipFamily":"ESP32-S3","parts":[{"path":"firmware/$AFW","offset":65536}]}]}
           EOF
 
           COMBO=build_combo/TamaPoke.ino.bin
@@ -187,7 +187,7 @@ jobs:
           {"name":"TamaPoke KO Cheonjiin Arcade 2.2","version":"2.2-ko-combo-arcade-${CSHORT}","new_install_prompt_erase":true,"builds":[{"chipFamily":"ESP32-S3","parts":[{"path":"firmware/$CFW","offset":65536}]}]}
           EOF
 
-          printf 'Basic SHA256: %s\nLiving Clock Cute Final SHA256: %s\nCombo SHA256: %s\nFlash offset: 0x10000\nAlarm-only Living Clock final: corrected Korean positions, rounded speech bubbles, time-of-day Korean messages, improved clock/date/weekday spacing, polished Pokemon/landscape layout. Combo remains Arcade 2.2.\n' "$SSHA" "$ASHA" "$CSHA" > site/build-info.txt
+          printf 'Basic SHA256: %s\nLiving Clock Clean Clock SHA256: %s\nCombo SHA256: %s\nFlash offset: 0x10000\nAlarm-only Living Clock 1.8: speech bubbles removed, large clock hierarchy, date/weekday aligned, lower Pokemon scene, slim battery/alarm status rail. Combo remains Arcade 2.2.3 family.\n' "$SSHA" "$ASHA" "$CSHA" > site/build-info.txt
 
       - name: Configure Pages
         uses: actions/configure-pages@v5
