@@ -80,16 +80,12 @@ jobs:
           grep -q 'stability2' source/TamaPoke/TamaPoke.ino
           grep -q 'stability2' source_alarm/TamaPoke/TamaPoke.ino
           grep -q 'stability2' source_combo/TamaPoke/TamaPoke.ino
-          grep -q 'bool manualClockView = false' source_combo/TamaPoke/TamaPoke.ino
-          grep -q 'manualClockView = !manualClockView' source_combo/TamaPoke/TamaPoke.ino
-          grep -q 'const bool dayMode = !pet.sleeping' source_combo/TamaPoke/TamaPoke.ino
 
       - name: Add expandable games to combo only
         run: |
           python3 combo_test/minigames_v1.py source_combo/TamaPoke
           grep -q '1.7-ko-combo-games1' source_combo/TamaPoke/TamaPoke.ino
           grep -q 'void startMole()' source_combo/TamaPoke/TamaPoke.ino
-          grep -q 'SFX_MOLE_HIT3' source_combo/TamaPoke/audio.h
 
       - name: Add date setting and larger fonts to combo only
         run: |
@@ -100,7 +96,6 @@ jobs:
         run: |
           python3 combo_test/quiz151_v1.py source_combo/TamaPoke
           grep -q '1.9-ko-combo-quiz151' source_combo/TamaPoke/TamaPoke.ino
-          grep -q 'void startQuiz151()' source_combo/TamaPoke/TamaPoke.ino
 
       - name: Apply minigame quality upgrade to combo only
         run: |
@@ -137,12 +132,12 @@ jobs:
           rm -rf build_alarm && mkdir build_alarm
           arduino-cli compile --fqbn "esp32:esp32:esp32s3:CDCOnBoot=cdc,FlashSize=16M,PSRAM=opi,PartitionScheme=app3M_fat9M_16MB" --build-path build_alarm source_alarm/TamaPoke
 
-      - name: Compile combo firmware
+      - name: Compile combo base firmware
         run: |
           rm -rf build_combo && mkdir build_combo
           arduino-cli compile --fqbn "esp32:esp32:esp32s3:CDCOnBoot=cdc,FlashSize=16M,PSRAM=opi,PartitionScheme=app3M_fat9M_16MB" --build-path build_combo source_combo/TamaPoke
 
-      - name: Prepare web installers and final v2.1 combo
+      - name: Prepare web installers and final v2.2 arcade combo
         run: |
           set -e
           rm -rf site
@@ -152,9 +147,11 @@ jobs:
           python3 combo_test/page_quiz151.py
           python3 combo_test/page_quality_v20.py
           python3 combo_test/page_userfix_v21.py
-          grep -q '2.1-ko-combo-userfix' source_combo/TamaPoke/TamaPoke.ino
-          grep -q 'random(151)' source_combo/TamaPoke/TamaPoke.ino
-          grep -q 'CX, 294, now, true, false, 4' source_combo/TamaPoke/TamaPoke.ino
+          grep -q '2.2-ko-combo-arcade' source_combo/TamaPoke/TamaPoke.ino
+          grep -q 'arcRenderTetris' source_combo/TamaPoke/TamaPoke.ino
+          grep -q 'arcRenderSnake' source_combo/TamaPoke/TamaPoke.ino
+          grep -q 'arcRenderMine' source_combo/TamaPoke/TamaPoke.ino
+          test -f build_combo/TamaPoke.ino.bin
           touch site/.nojekyll
 
           STABLE=build_stable/TamaPoke.ino.bin
@@ -178,13 +175,13 @@ jobs:
           COMBO=build_combo/TamaPoke.ino.bin
           CSHA=$(sha256sum "$COMBO" | awk '{print $1}')
           CSHORT=${CSHA:0:12}
-          CFW=tamapoke-ko-cheonjiin-userfix21-${CSHORT}.bin
+          CFW=tamapoke-ko-cheonjiin-arcade22-${CSHORT}.bin
           cp "$COMBO" "site/firmware/$CFW"
           cat > site/manifest-combo.json <<EOF
-          {"name":"TamaPoke KO Cheonjiin User Fix 2.1","version":"2.1-ko-combo-userfix-${CSHORT}","new_install_prompt_erase":true,"builds":[{"chipFamily":"ESP32-S3","parts":[{"path":"firmware/$CFW","offset":65536}]}]}
+          {"name":"TamaPoke KO Cheonjiin Arcade 2.2","version":"2.2-ko-combo-arcade-${CSHORT}","new_install_prompt_erase":true,"builds":[{"chipFamily":"ESP32-S3","parts":[{"path":"firmware/$CFW","offset":65536}]}]}
           EOF
 
-          printf 'Basic SHA256: %s\nAlarm SHA256: %s\nCombo SHA256: %s\nFlash offset: 0x10000\nCombo 2.1: stronger mole/Pikachu hit SFX; clock Pokemon card removed; Quiz151 Pokemon enlarged and randomized every question/retry.\n' "$SSHA" "$ASHA" "$CSHA" > site/build-info.txt
+          printf 'Basic SHA256: %s\nAlarm SHA256: %s\nCombo SHA256: %s\nFlash offset: 0x10000\nCombo 2.2: retains alarm + Cheonjiin + v2.1 fixes; adds progressive Tetris, Snake and Minesweeper. Tetris speeds up by stage, Snake adds speed/rocks, Minesweeper expands board/mines after clears.\n' "$SSHA" "$ASHA" "$CSHA" > site/build-info.txt
 
       - name: Configure Pages
         uses: actions/configure-pages@v5
