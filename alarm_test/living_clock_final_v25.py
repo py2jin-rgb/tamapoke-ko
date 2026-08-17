@@ -15,7 +15,7 @@ if n != 1:
 
 # Remove the whole residual idle-message branch left over from TEST1.
 # v1.8 had converted the sleeping branch to a no-op but left the following
-# `else if (...) { white rounded rect + 좋은 하루! }` alive.
+# else-if white rounded rectangle alive.
 pat = re.compile(
     r'\s*if \(sleeping\) \{ /\* clean clock: no floating speech text \*/ \}\s*'
     r'else if \(\(\(millis\(\)/1000UL\)%17UL\) < 3UL\) \{.*?\n\s*\}',
@@ -24,6 +24,11 @@ pat = re.compile(
 src, n = pat.subn('\n  // v1.9: no floating messages or white speech rectangles on the watch face.\n', src, count=1)
 if n != 1:
     raise SystemExit('v1.9 residual bubble block not found')
+
+# Defensive cleanup: the old idle greeting must never survive through another
+# generated-source variant. This is intentionally alarm-build only.
+src = src.replace('좋은 하루!', '')
+src = src.replace('HI!', '')
 
 # Slightly slimmer bottom information rail and a little more breathing room.
 src = src.replace('gfx->fillRoundRect(CX-116, 418, 232, 27, 13, glass);',
@@ -50,6 +55,11 @@ replacement = '''gfx->fillRoundRect(CX-58, 397, 116, 3, 2, pod <= 2 ? C565(0x72,
 if needle not in src:
     raise SystemExit('v1.9 pet marker missing')
 src = src.replace(needle, replacement, 1)
+
+if 'fillRoundRect(300, 307, 74, 31' in src:
+    raise SystemExit('v1.9 white idle rectangle still present')
+if '좋은 하루' in src:
+    raise SystemExit('v1.9 idle greeting still present')
 
 ino.write_text(src, encoding='utf-8')
 
