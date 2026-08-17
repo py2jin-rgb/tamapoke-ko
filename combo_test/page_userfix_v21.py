@@ -53,5 +53,6 @@ html=once(html,feature_anchor,feature_new,'page v2.1 feature line')
 page.write_text(html,encoding='utf-8')
 print('installer page updated for combo v2.1 user fixes')
 
-# Chain the new progressive-difficulty arcade pack and compile the final v2.2 binary.
+# Progressive arcade pack, then the real-device Korean alignment bugfix.
 subprocess.run(['python3','combo_test/page_arcade_v22.py'],check=True)
+subprocess.run(['python3','combo_test/page_arcade_fix_v221.py'],check=True)
