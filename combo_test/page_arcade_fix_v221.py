@@ -14,9 +14,9 @@ def once(old: str, new: str, label: str):
         raise SystemExit(f'v2.2.1 marker not found: {label}')
     src = src.replace(old, new, 1)
 
-# Distinct firmware marker.
+# Keep the v2.2 workflow marker while distinguishing the real-device 2.2.1 fix.
 src, n = re.subn(r'#define FW_VERSION "2\.2-ko-combo-arcade"',
-                 '#define FW_VERSION "2.2.1-ko-combo-arcadefix"', src, count=1)
+                 '#define FW_VERSION "2.2-ko-combo-arcade-fix221"', src, count=1)
 if n != 1:
     raise SystemExit('v2.2.1 firmware version marker not found')
 
