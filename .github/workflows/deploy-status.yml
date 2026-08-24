@@ -1,0 +1,54 @@
+name: Record firmware deploy status
+
+on:
+  workflow_run:
+    workflows: ["Build firmware and deploy installer"]
+    types: [completed]
+
+permissions:
+  contents: write
+
+jobs:
+  record:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout status branch or initialize it
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Write workflow result
+        env:
+          RUN_ID: ${{ github.event.workflow_run.id }}
+          RUN_NUMBER: ${{ github.event.workflow_run.run_number }}
+          RUN_CONCLUSION: ${{ github.event.workflow_run.conclusion }}
+          HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+          HEAD_BRANCH: ${{ github.event.workflow_run.head_branch }}
+          RUN_URL: ${{ github.event.workflow_run.html_url }}
+        run: |
+          set -e
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if git fetch origin build-status 2>/dev/null; then
+            git switch -C build-status origin/build-status
+          else
+            git switch --orphan build-status
+            git rm -rf . || true
+          fi
+          python3 - <<'PY'
+          import json, os, datetime
+          d = {
+            "workflow": "Build firmware and deploy installer",
+            "run_id": int(os.environ["RUN_ID"]),
+            "run_number": int(os.environ["RUN_NUMBER"]),
+            "conclusion": os.environ["RUN_CONCLUSION"],
+            "head_sha": os.environ["HEAD_SHA"],
+            "head_branch": os.environ["HEAD_BRANCH"],
+            "run_url": os.environ["RUN_URL"],
+            "recorded_utc": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+          }
+          open("deploy-status.json","w",encoding="utf-8").write(json.dumps(d,ensure_ascii=False,indent=2)+"\n")
+          PY
+          git add deploy-status.json
+          git commit -m "Record firmware workflow #${RUN_NUMBER}: ${RUN_CONCLUSION}" || true
+          git push origin build-status
