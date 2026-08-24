@@ -59,3 +59,7 @@ subprocess.run(['python3','combo_test/page_arcade_v22.py'],check=True)
 subprocess.run(['python3','combo_test/page_arcade_fix_v221.py'],check=True)
 subprocess.run(['python3','combo_test/page_fontfix_v223.py'],check=True)
 subprocess.run(['python3','combo_test/page_combo_final_v224.py'],check=True)
+
+# Temporary source-level power audit used to make the battery patch against the
+# exact final combo source rather than guessing hardware APIs.
+subprocess.run(['python3','combo_test/power_audit_v23.py'],check=True)
