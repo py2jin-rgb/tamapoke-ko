@@ -1,5 +1,6 @@
 from pathlib import Path
 import re
+import subprocess
 
 root = Path('source_combo/TamaPoke')
 patterns = re.compile(r'(screenOff|lastInteract|standby|brightness|bright|backlight|displayOff|displayOn|sleep|WiFi|Bluetooth|btStop|SD\.begin|SD\.open|setBrightness|setBacklight|gfx->flush|pwrShortPressed|touch)', re.I)
@@ -29,3 +30,7 @@ print(text)
 site=Path('site')
 site.mkdir(exist_ok=True)
 (site/'power-audit.txt').write_text(text,encoding='utf-8')
+
+# Apply the first safe Battery Edition pass only after auditing the exact final
+# v2.2.4 generated source.
+subprocess.run(['python3','combo_test/power_save_v23.py'],check=True)
