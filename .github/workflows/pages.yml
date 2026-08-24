@@ -95,9 +95,7 @@ jobs:
       - name: Add 151-level picture quiz to combo only
         run: |
           python3 combo_test/quiz151_v1.py source_combo/TamaPoke
-          python3 combo_test/quiz151_big_v24.py source_combo/TamaPoke
           grep -q '1.9-ko-combo-quiz151' source_combo/TamaPoke/TamaPoke.ino
-          grep -q 'PMD_IDLE, CX, 302, now, true, false, 5' source_combo/TamaPoke/TamaPoke.ino
 
       - name: Apply minigame quality upgrade to combo only
         run: |
@@ -107,6 +105,11 @@ jobs:
           cd ../..
           grep -q '2.0-ko-combo-qualitygames' source_combo/TamaPoke/TamaPoke.ino
           grep -q 'void startMonsterCatch()' source_combo/TamaPoke/TamaPoke.ino
+
+      - name: Enlarge 151 quiz Pokemon artwork
+        run: |
+          python3 combo_test/quiz151_big_v24.py source_combo/TamaPoke
+          grep -q 'PMD_IDLE, CX, 302, now, true, false, 5' source_combo/TamaPoke/TamaPoke.ino
 
       - name: Install Arduino CLI
         uses: arduino/setup-arduino-cli@v2
@@ -155,6 +158,7 @@ jobs:
           grep -q '2.3-ko-combo-battery' source_combo/TamaPoke/TamaPoke.ino
           grep -q 'powerBrightnessPct' source_combo/TamaPoke/TamaPoke.ino
           grep -q 'setCpuFrequencyMhz(80)' source_combo/TamaPoke/TamaPoke.ino
+          grep -q 'PMD_IDLE, CX, 302, now, true, false, 5' source_combo/TamaPoke/TamaPoke.ino
           grep -q 'arcRenderTetris' source_combo/TamaPoke/TamaPoke.ino
           grep -q 'arcRenderSnake' source_combo/TamaPoke/TamaPoke.ino
           grep -q 'arcRenderMine' source_combo/TamaPoke/TamaPoke.ino
