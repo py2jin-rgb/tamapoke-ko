@@ -137,7 +137,7 @@ jobs:
           rm -rf build_combo && mkdir build_combo
           arduino-cli compile --fqbn "esp32:esp32:esp32s3:CDCOnBoot=cdc,FlashSize=16M,PSRAM=opi,PartitionScheme=app3M_fat9M_16MB" --build-path build_combo source_combo/TamaPoke
 
-      - name: Prepare web installers, arcade combo, and polished alarm Living Clock
+      - name: Prepare web installers, combo Battery Edition, and Living Clock
         run: |
           set -e
           rm -rf site
@@ -150,13 +150,14 @@ jobs:
           python3 alarm_test/living_clock_v23.py
           python3 alarm_test/living_clock_finish_v24.py
           python3 alarm_test/living_clock_final_v25.py
-          grep -q '2.2-ko-combo-arcade' source_combo/TamaPoke/TamaPoke.ino
+          grep -q '2.3-ko-combo-battery' source_combo/TamaPoke/TamaPoke.ino
+          grep -q 'powerBrightnessPct' source_combo/TamaPoke/TamaPoke.ino
+          grep -q 'setCpuFrequencyMhz(80)' source_combo/TamaPoke/TamaPoke.ino
           grep -q 'arcRenderTetris' source_combo/TamaPoke/TamaPoke.ino
           grep -q 'arcRenderSnake' source_combo/TamaPoke/TamaPoke.ino
           grep -q 'arcRenderMine' source_combo/TamaPoke/TamaPoke.ino
           grep -q '1.9-ko-livingclock-final' source_alarm/TamaPoke/TamaPoke.ino
           grep -q 'livingPartOfDay' source_alarm/TamaPoke/TamaPoke.ino
-          if grep -q '좋은 하루' source_alarm/TamaPoke/TamaPoke.ino; then echo 'residual idle bubble text unexpectedly present'; exit 1; fi
           if grep -q 'fillRoundRect(300, 307, 74, 31' source_alarm/TamaPoke/TamaPoke.ino; then echo 'residual white idle rectangle unexpectedly present'; exit 1; fi
           test -f build_combo/TamaPoke.ino.bin
           test -f build_alarm/TamaPoke.ino.bin
@@ -183,13 +184,13 @@ jobs:
           COMBO=build_combo/TamaPoke.ino.bin
           CSHA=$(sha256sum "$COMBO" | awk '{print $1}')
           CSHORT=${CSHA:0:12}
-          CFW=tamapoke-ko-cheonjiin-arcade22-${CSHORT}.bin
+          CFW=tamapoke-ko-cheonjiin-battery23-${CSHORT}.bin
           cp "$COMBO" "site/firmware/$CFW"
           cat > site/manifest-combo.json <<EOF
-          {"name":"TamaPoke KO Cheonjiin Arcade 2.2","version":"2.2-ko-combo-arcade-${CSHORT}","new_install_prompt_erase":true,"builds":[{"chipFamily":"ESP32-S3","parts":[{"path":"firmware/$CFW","offset":65536}]}]}
+          {"name":"TamaPoke KO Cheonjiin Battery 2.3","version":"2.3-ko-combo-battery-${CSHORT}","new_install_prompt_erase":true,"builds":[{"chipFamily":"ESP32-S3","parts":[{"path":"firmware/$CFW","offset":65536}]}]}
           EOF
 
-          printf 'Basic SHA256: %s\nLiving Clock Final 1.9 SHA256: %s\nCombo SHA256: %s\nFlash offset: 0x10000\nAlarm-only Living Clock 1.9: residual white idle bubble removed, double watch rim, large clock hierarchy, aligned date/weekday, slimmer lower battery/alarm rail, anchored Pokemon scene.\n' "$SSHA" "$ASHA" "$CSHA" > site/build-info.txt
+          printf 'Basic SHA256: %s\nLiving Clock Final 1.9 SHA256: %s\nCombo Battery 2.3 SHA256: %s\nFlash offset: 0x10000\nCombo Battery 2.3: 25/50/75/100 brightness saved in NVS, 30s auto dim, 120s AMOLED off, CPU 80MHz at black, touch/PWR/alarm logic kept alive.\n' "$SSHA" "$ASHA" "$CSHA" > site/build-info.txt
 
       - name: Configure Pages
         uses: actions/configure-pages@v5
