@@ -95,7 +95,9 @@ jobs:
       - name: Add 151-level picture quiz to combo only
         run: |
           python3 combo_test/quiz151_v1.py source_combo/TamaPoke
+          python3 combo_test/quiz151_big_v24.py source_combo/TamaPoke
           grep -q '1.9-ko-combo-quiz151' source_combo/TamaPoke/TamaPoke.ino
+          grep -q 'PMD_IDLE, CX, 302, now, true, false, 5' source_combo/TamaPoke/TamaPoke.ino
 
       - name: Apply minigame quality upgrade to combo only
         run: |
@@ -190,7 +192,7 @@ jobs:
           {"name":"TamaPoke KO Cheonjiin Battery 2.3","version":"2.3-ko-combo-battery-${CSHORT}","new_install_prompt_erase":true,"builds":[{"chipFamily":"ESP32-S3","parts":[{"path":"firmware/$CFW","offset":65536}]}]}
           EOF
 
-          printf 'Basic SHA256: %s\nLiving Clock Final 1.9 SHA256: %s\nCombo Battery 2.3 SHA256: %s\nFlash offset: 0x10000\nCombo Battery 2.3: 25/50/75/100 brightness saved in NVS, 30s auto dim, 120s AMOLED off, CPU 80MHz at black, touch/PWR/alarm logic kept alive.\n' "$SSHA" "$ASHA" "$CSHA" > site/build-info.txt
+          printf 'Basic SHA256: %s\nLiving Clock Final 1.9 SHA256: %s\nCombo Battery 2.3 SHA256: %s\nFlash offset: 0x10000\nCombo Battery 2.3: 151 quiz extra-large 5x Pokemon artwork; 25/50/75/100 brightness saved in NVS, 30s auto dim, 120s AMOLED off, CPU 80MHz at black, touch/PWR/alarm logic kept alive.\n' "$SSHA" "$ASHA" "$CSHA" > site/build-info.txt
 
       - name: Configure Pages
         uses: actions/configure-pages@v5
