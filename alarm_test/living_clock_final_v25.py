@@ -25,8 +25,9 @@ src, n = pat.subn('\n  // v1.9: no floating messages or white speech rectangles 
 if n != 1:
     raise SystemExit('v1.9 residual bubble block not found')
 
-# Defensive cleanup: the old idle greeting must never survive through another
-# generated-source variant. This is intentionally alarm-build only.
+# Defensive cleanup of the exact old TEST1 labels.  Do not reject unrelated
+# occurrences of the words elsewhere in comments/font tables; the real visual
+# bug is guarded below by checking the old rectangle/render branch itself.
 src = src.replace('좋은 하루!', '')
 src = src.replace('HI!', '')
 
@@ -56,10 +57,12 @@ if needle not in src:
     raise SystemExit('v1.9 pet marker missing')
 src = src.replace(needle, replacement, 1)
 
+# Verify the actual old visual bug is gone.  This is intentionally specific:
+# a harmless phrase elsewhere must never block all Pages deployment again.
 if 'fillRoundRect(300, 307, 74, 31' in src:
     raise SystemExit('v1.9 white idle rectangle still present')
-if '좋은 하루' in src:
-    raise SystemExit('v1.9 idle greeting still present')
+if re.search(r'else if \(\(\(millis\(\)/1000UL\)%17UL\) < 3UL\)', src):
+    raise SystemExit('v1.9 residual timed idle bubble branch still present')
 
 ino.write_text(src, encoding='utf-8')
 
