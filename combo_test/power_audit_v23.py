@@ -34,3 +34,8 @@ site.mkdir(exist_ok=True)
 # Apply the first safe Battery Edition pass only after auditing the exact final
 # v2.2.4 generated source.
 subprocess.run(['python3','combo_test/power_save_v23.py'],check=True)
+
+# Battle 2.4 is generated after this script. Patch its generator against the
+# final polished arcade menu so the battle entry is actually reachable while
+# preserving Tetris, Snake, and Minesweeper.
+subprocess.run(['python3','combo_test/battle_menu_fix_v241.py'],check=True)
