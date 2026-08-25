@@ -1,6 +1,19 @@
 from pathlib import Path
 import hashlib, json, shutil, subprocess
 
+# Arduino's generated prototypes cover functions but not globals. The OTA modal
+# flag must exist before onTap()/render(), while the rest of the OTA state can
+# stay with the implementation block later in the sketch.
+otap=Path('combo_test/ota_v25.py')
+t=otap.read_text(encoding='utf-8')
+t=t.replace("s=s.replace(marker, marker+incs, 1)",
+            "s=s.replace(marker, marker+incs+'static bool otaOpen=false;\\n', 1)",1)
+t=t.replace('static bool otaOpen=false, otaSetupAp=false;',
+            'static bool otaSetupAp=false;',1)
+if "marker+incs+'static bool otaOpen=false;\\n'" not in t:
+    raise SystemExit('OTA early-state patch failed')
+otap.write_text(t,encoding='utf-8')
+
 subprocess.run(['python3','combo_test/ota_v25.py'],check=True)
 
 src=Path('build_ota/TamaPoke.ino.bin')
