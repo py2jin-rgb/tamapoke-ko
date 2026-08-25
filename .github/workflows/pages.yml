@@ -23,7 +23,7 @@ jobs:
 
       - name: Extract base source
         run: |
-          rm -rf source source_alarm source_combo
+          rm -rf source source_alarm source_combo source_battle
           mkdir -p source
           unzip -q source_package.zip -d source
           test -f source/TamaPoke/TamaPoke.ino
@@ -142,7 +142,7 @@ jobs:
           rm -rf build_combo && mkdir build_combo
           arduino-cli compile --fqbn "esp32:esp32:esp32s3:CDCOnBoot=cdc,FlashSize=16M,PSRAM=opi,PartitionScheme=app3M_fat9M_16MB" --build-path build_combo source_combo/TamaPoke
 
-      - name: Prepare web installers, combo Battery Edition, and Living Clock
+      - name: Prepare web installers, combo Battery Edition, Battle Edition, and Living Clock
         run: |
           set -e
           rm -rf site
@@ -152,10 +152,13 @@ jobs:
           python3 combo_test/page_quiz151.py
           python3 combo_test/page_quality_v20.py
           python3 combo_test/page_userfix_v21.py
+          python3 combo_test/battle_v24.py
           python3 alarm_test/living_clock_v23.py
           python3 alarm_test/living_clock_finish_v24.py
           python3 alarm_test/living_clock_final_v25.py
           grep -q '2.3-ko-combo-battery' source_combo/TamaPoke/TamaPoke.ino
+          grep -q '2.4-ko-combo-battle' source_battle/TamaPoke/TamaPoke.ino
+          grep -q 'esp_now_init' source_battle/TamaPoke/TamaPoke.ino
           grep -q 'powerBrightnessPct' source_combo/TamaPoke/TamaPoke.ino
           grep -q 'setCpuFrequencyMhz(80)' source_combo/TamaPoke/TamaPoke.ino
           grep -q 'PMD_IDLE, CX, 302, now, true, false, 5' source_combo/TamaPoke/TamaPoke.ino
@@ -166,6 +169,7 @@ jobs:
           grep -q 'livingPartOfDay' source_alarm/TamaPoke/TamaPoke.ino
           if grep -q 'fillRoundRect(300, 307, 74, 31' source_alarm/TamaPoke/TamaPoke.ino; then echo 'residual white idle rectangle unexpectedly present'; exit 1; fi
           test -f build_combo/TamaPoke.ino.bin
+          test -f build_battle/TamaPoke.ino.bin
           test -f build_alarm/TamaPoke.ino.bin
           touch site/.nojekyll
 
@@ -196,7 +200,16 @@ jobs:
           {"name":"TamaPoke KO Cheonjiin Battery 2.3","version":"2.3-ko-combo-battery-${CSHORT}","new_install_prompt_erase":true,"builds":[{"chipFamily":"ESP32-S3","parts":[{"path":"firmware/$CFW","offset":65536}]}]}
           EOF
 
-          printf 'Basic SHA256: %s\nLiving Clock Final 1.9 SHA256: %s\nCombo Battery 2.3 SHA256: %s\nFlash offset: 0x10000\nCombo Battery 2.3: 151 quiz extra-large 5x Pokemon artwork; 25/50/75/100 brightness saved in NVS, 30s auto dim, 120s AMOLED off, CPU 80MHz at black, touch/PWR/alarm logic kept alive.\n' "$SSHA" "$ASHA" "$CSHA" > site/build-info.txt
+          BATTLE=build_battle/TamaPoke.ino.bin
+          BSHA=$(sha256sum "$BATTLE" | awk '{print $1}')
+          BSHORT=${BSHA:0:12}
+          BFW=tamapoke-ko-cheonjiin-battle24-${BSHORT}.bin
+          cp "$BATTLE" "site/firmware/$BFW"
+          cat > site/manifest-battle.json <<EOF
+          {"name":"TamaPoke KO Cheonjiin Battle 2.4","version":"2.4-ko-combo-battle-${BSHORT}","new_install_prompt_erase":true,"builds":[{"chipFamily":"ESP32-S3","parts":[{"path":"firmware/$BFW","offset":65536}]}]}
+          EOF
+
+          printf 'Basic SHA256: %s\nLiving Clock Final 1.9 SHA256: %s\nCombo Battery 2.3 SHA256: %s\nBattle 2.4 SHA256: %s\nFlash offset: 0x10000\nCombo Battery 2.3: 151 quiz extra-large 5x Pokemon artwork; 25/50/75/100 brightness saved in NVS, 30s auto dim, 120s AMOLED off, CPU 80MHz at black, touch/PWR/alarm logic kept alive.\nBattle 2.4: Battery 2.3 base plus two-device ESP-NOW battle, attack/guard/special HP combat, win/loss persistence, radio on only while battle modal is open.\n' "$SSHA" "$ASHA" "$CSHA" "$BSHA" > site/build-info.txt
 
       - name: Configure Pages
         uses: actions/configure-pages@v5
