@@ -8,7 +8,7 @@ anchor="# Route touch/render into the battle modal before existing minigame hand
 if anchor not in s:
     raise SystemExit('battle menu fix anchor missing')
 
-fix=r'''# Final Battery 2.3 menu is the polished arcade layout, not the old MORE tile.
+fix=r"""# Final Battery 2.3 menu is the polished arcade layout, not the old MORE tile.
 # Add Battle as the fourth arcade entry while preserving Tetris/Snake/Minesweeper.
 def replace_cpp_function(text, signature, body):
     m=re.search(re.escape(signature)+r'\s*\{',text)
@@ -23,8 +23,8 @@ def replace_cpp_function(text, signature, body):
     return text[:start]+body+text[end:]
 
 # Main game menu keeps every existing game, but labels the arcade entry clearly.
-s=s.replace('comboFinalTextIn(koOr("새 미니게임 3종","3 NEW GAMES"),68,383,330,UI_WHITE,2);',
-            'comboFinalTextIn(koOr("아케이드 + 통신 배틀","ARCADE + BATTLE"),68,383,330,UI_WHITE,2);',1)
+s=s.replace('comboFinalTextIn(koOr(\"새 미니게임 3종\",\"3 NEW GAMES\"),68,383,330,UI_WHITE,2);',
+            'comboFinalTextIn(koOr(\"아케이드 + 통신 배틀\",\"ARCADE + BATTLE\"),68,383,330,UI_WHITE,2);',1)
 
 s=replace_cpp_function(s,'void arcGameMenuTap(int16_t x,int16_t y)',r'''void arcGameMenuTap(int16_t x,int16_t y) {
   lastInteract=millis();
@@ -50,7 +50,7 @@ s=replace_cpp_function(s,'void arcRenderMenu()',r'''void arcRenderMenu() {
 
 if '아케이드 + 통신 배틀' not in s or 'arcMenuOpen=false; startBattle(); return;' not in s:
     raise SystemExit('battle final menu reachability invariant missing')
-'''
+"""
 
 s=s.replace(anchor,fix+'\n'+anchor,1)
 p.write_text(s,encoding='utf-8')
