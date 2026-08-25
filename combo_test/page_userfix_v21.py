@@ -26,9 +26,13 @@ clock_new = '''  // Pokemon now sits directly on the watch-face background: no l
 src = once(src, clock_old, clock_new, 'standby Pokemon card removal')
 src = once(src,'  quizTargetDex = QUIZ151_ORDER[quizLevel - 1];','  const uint16_t previousDex = quizTargetDex;\n  do { quizTargetDex = (uint16_t)(1 + random(151)); } while (quizTargetDex == previousDex);','quiz random target')
 src = once(src,'  quizCorrectSlot = (uint8_t)((quizLevel * 7u) % 3u);','  quizCorrectSlot = (uint8_t)random(3);','quiz random correct slot')
-pat = re.compile(r'drawPmdActM\(miniOpponentPmd,\s*PMD_IDLE,\s*CX,\s*276,\s*now,\s*true,\s*false,\s*3\)')
-src, n = pat.subn('drawPmdActM(miniOpponentPmd, PMD_IDLE, CX, 294, now, true, false, 4)', src, count=1)
-if n != 1: raise SystemExit('v2.1 marker not found: quiz main Pokemon scale')
+# The dedicated quiz151_big_v24 patch may already have enlarged the main sprite.
+# Preserve that 5x artwork; only upgrade the legacy 3x form when present.
+legacy = re.compile(r'drawPmdActM\(miniOpponentPmd,\s*PMD_IDLE,\s*CX,\s*276,\s*now,\s*true,\s*false,\s*3\)')
+if legacy.search(src):
+    src = legacy.sub('drawPmdActM(miniOpponentPmd, PMD_IDLE, CX, 294, now, true, false, 4)', src, count=1)
+elif 'drawPmdActM(miniOpponentPmd, PMD_IDLE, CX, 302, now, true, false, 5)' not in src:
+    raise SystemExit('v2.1 marker not found: quiz main Pokemon scale')
 src, n = re.subn(r'#define FW_VERSION "2\.0-ko-combo-qualitygames-final"','#define FW_VERSION "2.1-ko-combo-userfix"',src,count=1)
 if n != 1: raise SystemExit('v2.1 marker not found: firmware version')
 ino.write_text(src, encoding='utf-8')
@@ -53,13 +57,8 @@ html=once(html,feature_anchor,feature_new,'page v2.1 feature line')
 page.write_text(html,encoding='utf-8')
 print('installer page updated for combo v2.1 user fixes')
 
-# Progressive arcade pack, full real-device game polish, Korean typography,
-# then the final v2.2.4 real-device input/menu repair.
 subprocess.run(['python3','combo_test/page_arcade_v22.py'],check=True)
 subprocess.run(['python3','combo_test/page_arcade_fix_v221.py'],check=True)
 subprocess.run(['python3','combo_test/page_fontfix_v223.py'],check=True)
 subprocess.run(['python3','combo_test/page_combo_final_v224.py'],check=True)
-
-# Temporary source-level power audit used to make the battery patch against the
-# exact final combo source rather than guessing hardware APIs.
 subprocess.run(['python3','combo_test/power_audit_v23.py'],check=True)
