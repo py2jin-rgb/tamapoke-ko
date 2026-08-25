@@ -43,7 +43,7 @@ struct __attribute__((packed)) BattlePacket {
 };
 static const uint32_t BATTLE_MAGIC=0x54424C31UL; // TBL1
 static volatile bool battleRxPending=false;
-static volatile BattlePacket battleRx;
+static BattlePacket battleRx;
 static const uint8_t battleBroadcast[6]={0xff,0xff,0xff,0xff,0xff,0xff};
 '''
 anchor='static uint32_t powerNoticeUntil=0;'
