@@ -53,5 +53,12 @@ if '아케이드 + 통신 배틀' not in s or 'arcMenuOpen=false; startBattle();
 """
 
 s=s.replace(anchor,fix+'\n'+anchor,1)
+
+# Keep the existing workflow stable: when Battle 2.4 has built and written its
+# installer card, generate/publish the independent ⑤ OTA 2.5 edition next.
+hook="subprocess.run(['python3','combo_test/ota_pipeline_v25.py'],check=True)"
+if hook not in s:
+    s += "\n\n# ⑤ Wi-Fi OTA Edition pipeline\n" + hook + "\n"
+
 p.write_text(s,encoding='utf-8')
-print('Battle 2.4 final arcade menu reachability fix applied')
+print('Battle 2.4 final arcade menu reachability fix + OTA 2.5 hook applied')
