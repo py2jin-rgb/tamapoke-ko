@@ -44,7 +44,7 @@ s=replace_cpp_function(s,'void arcRenderMenu()',r'''void arcRenderMenu() {
   arcCard(72,224,322,116,C565(0xff,0xd2,0x8b),koOr("지뢰찾기","MINESWEEPER"),koOr("깨면 지뢰가 늘어!","MORE MINES"));
   gfx->fillRoundRect(72,362,322,62,16,C565(0xff,0xc8,0x5a));
   gfx->drawRoundRect(72,362,322,62,16,C565(0x9a,0x6a,0x20));
-  comboFinalTextIn(koOr("⚔ 통신 배틀","BATTLE"),72,381,322,UI_INK,2);
+  comboFinalTextIn(koOr("통신 배틀","BATTLE"),72,381,322,UI_INK,2);
   gfx->flush();
 }''')
 
