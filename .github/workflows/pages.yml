@@ -152,6 +152,8 @@ jobs:
           python3 combo_test/page_quiz151.py
           python3 combo_test/page_quality_v20.py
           python3 combo_test/page_userfix_v21.py
+          sed -i 's/static volatile BattlePacket battleRx;/static BattlePacket battleRx;/' combo_test/battle_v24.py
+          grep -q 'static BattlePacket battleRx;' combo_test/battle_v24.py
           python3 combo_test/battle_v24.py
           python3 alarm_test/living_clock_v23.py
           python3 alarm_test/living_clock_finish_v24.py
