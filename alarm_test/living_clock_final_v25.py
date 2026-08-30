@@ -58,8 +58,16 @@ html=html.replace('🕒 LIVING CLOCK · CLEAN CLOCK','✨ LIVING CLOCK · FINAL 
 html=html.replace('🕒 Living Clock 클린 알람시계 설치','✨ Living Clock v1.9 알람시계 설치',1)
 html=html.replace('manifest-alarm.json?v=livingclock-clean18','manifest-alarm.json?v=livingclock-final19',1)
 html=html.replace('✓ 말풍선 완전 제거 · 큰 시간 중심 · 날짜/요일 정렬 · 하단 배터리/알람 상태바 · 포켓몬 공간 분리','✓ 잔여 흰 박스/말풍선 완전 제거 · 이중 시계 테두리 · 큰 시간 중심 · 슬림 상태바 · 포켓몬 공간 정리',1)
+
+# Global flashing warning: applies to every Korean-patch installer on this page.
+# Keep it visually dominant and explicit because selecting Erase wipes saved data.
+if 'id="erase-global-warning"' not in html:
+    warning = '''\n<div id="erase-global-warning" style="margin:18px 0 24px;padding:18px 16px;border:3px solid #ff3b3b;border-radius:14px;background:#2b0b0b;color:#ff4d4d;text-align:center;font-size:24px;line-height:1.45;font-weight:900;text-decoration:underline;text-decoration-thickness:3px;text-underline-offset:5px;box-shadow:0 0 0 2px rgba(255,59,59,.18)">⚠️ 한글패치 설치 시 ERASE / 초기화는 절대 체크하지 마세요! ⚠️<br><span style="font-size:18px">기존 포켓몬·설정·저장 데이터를 유지하려면 ERASE 체크 없이 설치하세요.</span></div>\n'''
+    anchor = '<div class="notice">'
+    if anchor not in html: raise SystemExit('global erase warning anchor missing')
+    html = html.replace(anchor, warning + anchor, 1)
 page.write_text(html,encoding='utf-8')
-print('Living Clock v1.9 installer card updated')
+print('Living Clock v1.9 installer card updated + global ERASE warning added')
 
 # The main workflow already executes this script after Battle 2.4 is built and
 # after site/index.html exists. Publish ⑤ here so the existing workflow deploys
