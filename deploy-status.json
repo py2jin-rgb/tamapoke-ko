@@ -1,10 +1,10 @@
 {
   "workflow": "Build firmware and deploy installer",
-  "run_id": 33942202616,
-  "run_number": 140,
+  "run_id": 33942004789,
+  "run_number": 139,
   "conclusion": "cancelled",
-  "head_sha": "a6bd785ce82e183e47f4a2e8f853b9d782b97bbd",
+  "head_sha": "d44fcaff456e72455b2f910159b77c0cfa3bb70b",
   "head_branch": "main",
-  "run_url": "https://github.com/py2jin-rgb/tamapoke-ko/actions/runs/33942202616",
-  "recorded_utc": "2026-09-05T03:34:08.558416+00:00"
+  "run_url": "https://github.com/py2jin-rgb/tamapoke-ko/actions/runs/33942004789",
+  "recorded_utc": "2026-09-05T03:34:18.690432+00:00"
 }
