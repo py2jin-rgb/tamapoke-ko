@@ -72,6 +72,19 @@ def install_manifest(name, version, path, offset, metadata=None):
     return result
 
 
+def install_dual_slot_manifest(name, version, path, app0_offset, app1_offset, metadata=None):
+    """Write the SAME verified app image into both existing OTA app slots.
+    
+    No bootloader, partition table, NVS, otadata, or filesystem parts are included.
+    This is only for the known 16 MiB app3M_fat9M_16MB layout.
+    """
+    if not (0 < app0_offset < app1_offset):
+        raise ValueError('Invalid OTA app partition offsets')
+    result = install_manifest(name, version, path, app0_offset, metadata)
+    result['builds'][0]['parts'].append({'path': path, 'offset': app1_offset})
+    return result
+
+
 def source_fingerprint(source):
     files = sorted(p for p in Path(source).iterdir() if p.is_file() and p.suffix in ('.ino', '.cpp', '.c', '.h', '.hpp', '.inc'))
     if not files:
@@ -94,6 +107,8 @@ def package(binary, output, cache, source, commit=None):
     data = binary.read_bytes()
     if not 24 < len(data) <= config['app_slot_size'] or data[0] != 0xE9:
         raise ValueError('Firmware is not a size-compatible ESP application image')
+    if config['app1_offset'] - config['app0_offset'] != config['app_slot_size']:
+        raise ValueError('Dual-slot USB requires the exact configured 3 MiB OTA slot layout')
     if fw_version.encode() not in data:
         raise ValueError('Compiled binary does not contain the expected firmware version; rebuild it')
     sha = digest(data)
@@ -141,6 +156,9 @@ def package(binary, output, cache, source, commit=None):
     version = fw_version + '-' + sha[:12]
     write_json(output / 'manifest-ota.json', install_manifest(config['name'], version, relative, config['app0_offset'], meta))
     write_json(output / 'manifest-ota-app1.json', install_manifest(config['name'] + ' / app1', version, relative, config['app1_offset'], meta))
+    write_json(output / 'manifest-ota-usb.json',
+               install_dual_slot_manifest(config['name'] + ' / USB both OTA slots', version, relative,
+                                          config['app0_offset'], config['app1_offset'], meta))
     latest = {'build': config['build'], 'version': config['version'], 'url': config['public_base_url'] + relative,
               'sha256': sha, 'size': len(data), 'source_commit': commit, 'source_tree_sha256': tree_sha}
     write_json(output / 'ota-latest.json', latest)
@@ -161,8 +179,8 @@ def package(binary, output, cache, source, commit=None):
     (output / '.nojekyll').touch()
     info = [f"⑤ {fw_version} / build {config['build']}", f'Source commit: {commit}', f'Source tree SHA256: {tree_sha}',
             f'Firmware: {relative}', f'Size: {len(data)}', f'SHA256: {sha}', 'Hardware battery duration: not measured',
-            'USB app0: 0x10000; USB app1: 0x310000. Choose the confirmed running slot; never erase.',
-            'Older 2.6 devices: prefer the in-device Wi-Fi update to preserve OTA slot selection.', '', 'Preserved releases:']
+            'USB simple: one click writes the identical app image to BOTH app0 0x10000 and app1 0x310000; NEVER erase.',
+            'USB advanced: choose a confirmed running app slot only. Wi-Fi OTA remains available.', '', 'Preserved releases:']
     info += [f"{e['name']}: {e['size']} bytes / {e['sha256']} / {e['firmware_path']}" for e in legacy]
     (output / 'build-info.txt').write_text('\n'.join(info) + '\n', encoding='utf-8')
     (output / 'ota-info.txt').write_text('\n'.join(info[:7]) + '\n', encoding='utf-8')
