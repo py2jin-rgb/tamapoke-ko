@@ -31,8 +31,11 @@ body{margin:0;background:#10141c;color:#f5f7fb;font-family:system-ui,-apple-syst
 <li><b>업데이트 검증:</b> 새 OTA에서 인증서·파일 크기·SHA256을 확인합니다. 기존 저장 영역과 파티션 배치를 유지합니다.</li>
 </ul>
 <p class="measurement"><b>실기 측정 상태:</b> 배터리 지속시간과 평균 전류는 아직 실측하지 않았습니다. 사용시간·절감률은 측정 후 공개합니다.</p>
-<div class="otawarn"><b>기존 ⑤ 2.6 사용자는 기기의 Wi-Fi 업데이트를 우선 이용하세요.</b><br>놀이 선택 → Wi-Fi 업데이트 → 업데이트 확인. Wi-Fi가 저장되어 있지 않으면 먼저 기기에서 설정을 진행합니다. OTA는 비활성 앱 슬롯에 설치하고 정상 완료 후 전환합니다.</div>
-<details class="install-guide"><summary>USB 설치 · 현재 실행 중인 앱 슬롯을 확인한 경우</summary>
+<div class="otawarn"><b>🔌 유선 USB 설치는 바로 아래 버튼 하나만 누르면 됩니다.</b><br>기존 ⑤ 2.6 또는 2.8을 사용 중인 Waveshare ESP32-S3-Touch-AMOLED-1.75의 동일한 16MB 파티션 구성 전용입니다. app0/app1을 몰라도 두 앱 슬롯에 같은 2.8을 설치합니다. <b>Erase/초기화는 절대 선택하지 마세요.</b></div>
+<div class="install otainstall"><esp-web-install-button id="usb-simple-installer" manifest="manifest-ota-usb.json?v=system28"><button slot="activate">🔌 ⑤ 2.8 USB 설치 · 버튼 하나</button><span slot="unsupported">USB 설치는 PC용 Chrome 또는 Edge가 필요합니다.</span><span slot="not-allowed">HTTPS 페이지에서 실행하세요.</span></esp-web-install-button><p class="small">USB 연결 → 이 버튼 클릭 → COM 포트 선택 → 설치 (Erase 선택 금지).<br>app0/app1에 같은 펌웨어를 설치하며, 부트로더·NVS·OTA 선택 정보는 변경하지 않습니다.</p></div>
+<p class="small">기기에서 Wi-Fi로 설치하려면: 놀이 선택 → Wi-Fi 업데이트 → 업데이트 확인. 새 보드 또는 파티션 배치가 다른 기기에는 이 USB 버튼을 사용하지 마세요.</p>
+<details class="install-guide"><summary>고급 USB 설치 · app0/app1을 직접 선택할 경우만 펼치기</summary>
+<p>일반 사용자는 위의 <b>⑤ 2.8 USB 설치 · 버튼 하나</b>만 이용하세요. 이 아래는 고급 사용자용입니다.</p>
 <p>OTA 사용 후에는 실행 위치가 <code>app0</code> 또는 <code>app1</code>일 수 있습니다. <b>현재 실행 슬롯에 맞는 버튼 하나만</b> 사용하세요. 아래 설치는 해당 앱만 덮어쓰며, 부트로더·파티션·NVS·OTA 선택 정보는 변경하지 않습니다.</p>
 <p>2.8의 USB 시리얼 시작 로그에서 실행 슬롯과 오프셋을 볼 수 있습니다. 이전 버전에서 슬롯을 모르면 기기 OTA를 먼저 사용하세요. 잘못된 슬롯에 썼을 때 버전이 바뀌지 않는 문제를 <b>Erase로 해결하지 마세요.</b></p>
 <div class="install otainstall"><esp-web-install-button id="ota-installer" manifest="manifest-ota.json?v=system28"><button slot="activate">app0 확인 · 2.8 USB 설치</button><span slot="unsupported">USB 설치는 PC용 Chrome 또는 Edge가 필요합니다.</span><span slot="not-allowed">HTTPS 페이지에서 실행하세요.</span></esp-web-install-button><p class="small">app0 · 0x10000 · Erase 체크 금지</p></div>
