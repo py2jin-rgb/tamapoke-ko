@@ -1,0 +1,5 @@
+.build/
+site/
+firmware/TamaPoke/hangul_full16.h
+**/__pycache__/
+*.pyc

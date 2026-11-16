@@ -1,14 +1,19 @@
 from pathlib import Path
 import sys
+import argparse
 from PIL import Image, ImageDraw, ImageFont
 
-OUT = Path(sys.argv[1] if len(sys.argv) > 1 else 'hangul_full16.h')
+parser = argparse.ArgumentParser(description='Generate the existing Nanum Hangul bitmap font')
+parser.add_argument('output', nargs='?', default='hangul_full16.h')
+parser.add_argument('--font', help='Explicit Nanum font file for reproducible local/CI builds')
+args = parser.parse_args()
+OUT = Path(args.output)
 CANDIDATES = [
     '/usr/share/fonts/truetype/nanum/NanumBarunGothicBold.ttf',
     '/usr/share/fonts/truetype/nanum/NanumGothicBold.ttf',
     '/usr/share/fonts/truetype/nanum/NanumGothic.ttf',
 ]
-font_path = next((p for p in CANDIDATES if Path(p).exists()), None)
+font_path = args.font or next((p for p in CANDIDATES if Path(p).exists()), None)
 if not font_path:
     raise SystemExit('Nanum Korean font not found')
 font = ImageFont.truetype(font_path, 16)

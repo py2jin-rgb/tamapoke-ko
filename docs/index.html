@@ -7,42 +7,95 @@
 <title>TamaPoke KO · 온라인 설치</title>
 <style>
 body{margin:0;background:#10141c;color:#f5f7fb;font-family:system-ui,-apple-system,"Malgun Gothic",sans-serif}.wrap{max-width:680px;margin:auto;padding:18px 18px 40px}.card{background:#1a202b;border:1px solid #30394a;border-radius:18px;padding:22px;margin:18px 0}h1{font-size:30px;margin:20px 0 8px}.sub,.small{color:#aeb7c7}.ok{color:#69db91}.warn{background:#302814;border:1px solid #806d30;border-radius:12px;padding:14px;color:#ffe59a}.erase-alert{margin:0 0 24px;padding:22px 16px;border:5px solid #ff1f1f;border-radius:16px;background:#4a0909;color:#ff3b3b;text-align:center;font-size:28px;font-weight:1000;line-height:1.4;box-shadow:0 0 0 4px rgba(255,31,31,.18)}.erase-alert .important{display:block;color:#fff200;font-size:18px;font-weight:1000;margin-bottom:6px;letter-spacing:.5px}.erase-alert .main{text-decoration:underline;text-decoration-thickness:4px;text-underline-offset:6px}.erase-alert .white{display:block;color:#fff;font-size:18px;margin-top:12px;font-weight:900}.notice{background:#15221b;border:1px solid #35664a;border-radius:12px;padding:14px;margin:16px 0;color:#d9f7e3}.notice b{color:#7bea9f}.legalcard{border-color:#44516a;background:#171d28}.legalnote{background:#111722;border:1px solid #344159;border-radius:12px;padding:14px;color:#cad4e4}.testcard{border-color:#806d30;background:#211e18}.testtag{display:inline-block;background:#5b4a16;color:#ffe07a;border:1px solid #8c7425;border-radius:999px;padding:4px 10px;font-size:12px;font-weight:800}.testwarn{background:#302814;border:1px solid #806d30;border-radius:12px;padding:14px;color:#ffe59a}.combocard{border-color:#5161a8;background:#191c2b}.combotag{display:inline-block;background:#28305d;color:#bfc9ff;border:1px solid #5363ac;border-radius:999px;padding:4px 10px;font-size:12px;font-weight:800}.combowarn{background:#202541;border:1px solid #5363ac;border-radius:12px;padding:14px;color:#d6dcff}.install{text-align:center;padding:22px 0}button{border:0;border-radius:13px;padding:15px 25px;background:#69db91;color:#07120b;font-size:18px;font-weight:800;cursor:pointer}.testinstall button{background:#ffd75e;color:#261d00}.comboinstall button{background:#aebaff;color:#11162c}.step{margin:10px 0}code{background:#0b0e13;padding:2px 6px;border-radius:5px}a{color:#73cfff;text-decoration:none}a:hover{text-decoration:underline}.links{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}.linkbtn{display:inline-block;border:1px solid #3a465b;background:#222a38;border-radius:10px;padding:10px 13px;font-weight:700}footer{margin-top:28px;padding-top:18px;border-top:1px solid #30394a;color:#8f99aa;font-size:12px;line-height:1.7}
+.battlecard{border-color:#b98430;background:#251e16}.battletag{display:inline-block;background:#5a3f17;color:#ffe09a;border:1px solid #b98430;border-radius:999px;padding:4px 10px;font-size:12px;font-weight:800}.battlewarn{background:#302414;border:1px solid #b98430;border-radius:12px;padding:14px;color:#ffe6ad}.battleinstall button{background:#ffd36a;color:#241900}.otacard{border-color:#478f70;background:#15251f}.otatag{display:inline-block;background:#173c30;color:#a8f0cf;border:1px solid #478f70;border-radius:999px;padding:4px 10px;font-size:12px;font-weight:800}.otawarn{background:#193127;border:1px solid #478f70;border-radius:12px;padding:14px;color:#c8f5df}.otainstall button{background:#8de0b8;color:#10241b}.otacard{border-color:#478f70;background:#15251f}.otatag{display:inline-block;background:#173c30;color:#a8f0cf;border:1px solid #478f70;border-radius:999px;padding:4px 10px;font-size:12px;font-weight:800}.otawarn{background:#193127;border:1px solid #478f70;border-radius:12px;padding:14px;color:#c8f5df}.otainstall button{background:#8de0b8;color:#10241b}
+.features{padding-left:22px;line-height:1.7}.features li{margin:9px 0}.measurement{background:#293040;border:1px solid #64748b;border-radius:12px;padding:14px;line-height:1.65}.install-guide,.release-details{margin-top:18px;border-top:1px solid #478f70;padding-top:16px;line-height:1.65}summary{cursor:pointer;font-weight:800;padding:5px 0}.hash,.hash code{overflow-wrap:anywhere;word-break:break-all}.release-details a{overflow-wrap:anywhere}.release-details button{font-size:15px;padding:12px 15px;background:#cbd5e1;color:#15202e}.legacy-heading{margin-top:34px}.otacard{border-width:2px}.wrap{max-width:760px}button{max-width:100%;box-sizing:border-box;white-space:normal;line-height:1.45}
 </style>
 </head>
 <body><div class="wrap">
 <div class="erase-alert"><span class="important">🚨 중요 · 반드시 확인 🚨</span><span class="main">⚠️ 한글패치 / 업데이트 설치 시 ERASE 체크 절대 하지 마세요!</span><span class="white">Erase/초기화를 체크하면 기존 포켓몬·설정·저장 데이터가 삭제될 수 있습니다.</span></div>
 <h1>🔴 TamaPoke 한국어판</h1>
-<p class="sub">Waveshare ESP32-S3-Touch-AMOLED-1.75 · 온라인 업데이트</p>
+<p class="sub">Waveshare ESP32-S3-Touch-AMOLED-1.75 · 시스템 절전 2.8</p>
+
 <div class="notice"><b>비공식 · 무료 · 비상업적 팬 프로젝트</b><br>이 페이지는 개인 취미로 운영되는 TamaPoke 한국어 현지화/수정 프로젝트입니다. Nintendo, Creatures Inc., GAME FREAK inc., The Pokémon Company, The Pokémon Company International 또는 그 관계사와 제휴·후원·승인·공식 관계가 없습니다. Pokémon 관련 명칭·캐릭터·디자인·상표 및 기타 지식재산은 각 권리자에게 귀속됩니다.</div>
 
+<section class="card otacard" id="battery28" data-release-build="__RELEASE_BUILD__">
+<span class="otatag">🔋 SYSTEM BATTERY · __RELEASE_VERSION__</span>
+<h2>⑤ 시스템 절전 + Battle + OTA + 음량 __RELEASE_VERSION__</h2>
+<p>기존 ⑤ 2.6의 한글·육성·미니게임·통신 배틀·알람·음량 기능을 이어받고, <b>화면이 꺼진 동안 불필요한 표시·통신·오디오 작업을 줄이는</b> 업데이트입니다.</p>
+<ul class="features">
+<li><b>배터리 기본 모드:</b> 무조작 30초 감광 → 2분 화면 꺼짐. 수동으로 연 시계에도 적용됩니다.</li>
+<li><b>꺼진 화면:</b> 패널을 잠재우고 화면 전송을 멈춥니다. 터치·PWR·알람 복귀를 처리합니다.</li>
+<li><b>짧은 대기 절전:</b> Light-sleep을 사용하며, USB 연결 중에는 적용하지 않습니다. 설정에서 끌 수 있습니다.</li>
+<li><b>상시 시계:</b> 기본값은 OFF입니다. 계속 표시하려면 설정에서 켜며, 표시 중에는 전력을 더 사용합니다.</li>
+<li><b>통신과 소리:</b> AP 설정·배틀 대기의 무기한 실행을 제한하고, 소리가 없을 때 오디오 장치를 쉬게 합니다.</li>
+<li><b>업데이트 검증:</b> 새 OTA에서 인증서·파일 크기·SHA256을 확인합니다. 기존 저장 영역과 파티션 배치를 유지합니다.</li>
+</ul>
+<p class="measurement"><b>실기 측정 상태:</b> 배터리 지속시간과 평균 전류는 아직 실측하지 않았습니다. 사용시간·절감률은 측정 후 공개합니다.</p>
+<div class="otawarn"><b>기존 ⑤ 2.6 사용자는 기기의 Wi-Fi 업데이트를 우선 이용하세요.</b><br>놀이 선택 → Wi-Fi 업데이트 → 업데이트 확인. Wi-Fi가 저장되어 있지 않으면 먼저 기기에서 설정을 진행합니다. OTA는 비활성 앱 슬롯에 설치하고 정상 완료 후 전환합니다.</div>
+<details class="install-guide"><summary>USB 설치 · 현재 실행 중인 앱 슬롯을 확인한 경우</summary>
+<p>OTA 사용 후에는 실행 위치가 <code>app0</code> 또는 <code>app1</code>일 수 있습니다. <b>현재 실행 슬롯에 맞는 버튼 하나만</b> 사용하세요. 아래 설치는 해당 앱만 덮어쓰며, 부트로더·파티션·NVS·OTA 선택 정보는 변경하지 않습니다.</p>
+<p>2.8의 USB 시리얼 시작 로그에서 실행 슬롯과 오프셋을 볼 수 있습니다. 이전 버전에서 슬롯을 모르면 기기 OTA를 먼저 사용하세요. 잘못된 슬롯에 썼을 때 버전이 바뀌지 않는 문제를 <b>Erase로 해결하지 마세요.</b></p>
+<div class="install otainstall"><esp-web-install-button id="ota-installer" manifest="manifest-ota.json?v=system28"><button slot="activate">app0 확인 · 2.8 USB 설치</button><span slot="unsupported">USB 설치는 PC용 Chrome 또는 Edge가 필요합니다.</span><span slot="not-allowed">HTTPS 페이지에서 실행하세요.</span></esp-web-install-button><p class="small">app0 · 0x10000 · Erase 체크 금지</p></div>
+<div class="install otainstall"><esp-web-install-button id="ota-app1-installer" manifest="manifest-ota-app1.json?v=system28"><button slot="activate">app1 확인 · 2.8 USB 설치</button><span slot="unsupported">USB 설치는 PC용 Chrome 또는 Edge가 필요합니다.</span><span slot="not-allowed">HTTPS 페이지에서 실행하세요.</span></esp-web-install-button><p class="small">app1 · 0x310000 · Erase 체크 금지</p></div>
+</details>
+<details class="release-details"><summary>배포 파일 · 검증 정보 · 이전 2.6 복원</summary>
+<p>버전 __RELEASE_VERSION__ · OTA build __RELEASE_BUILD__ · __RELEASE_SIZE__ bytes</p>
+<p>소스 커밋: <a href="https://github.com/py2jin-rgb/tamapoke-ko/commit/__SOURCE_COMMIT__">__SOURCE_COMMIT__</a></p>
+<p class="hash">SHA256: <code>__RELEASE_SHA256__</code></p>
+<div class="links"><a class="linkbtn" href="__RELEASE_BINARY__" download>2.8 앱 BIN</a><a class="linkbtn" href="release.json">릴리스 정보</a><a class="linkbtn" href="SHA256SUMS.txt">전체 SHA256</a></div>
+<h3>이전 ⑤ OTA + Volume 2.6</h3>
+<p>이전 동작으로 돌아가기 위한 원본 배포 파일을 그대로 보존합니다. 2.8 절전 개선은 포함되어 있지 않습니다. 복원도 <b>확인한 현재 앱 슬롯에만</b> 쓰고 Erase를 선택하지 마세요. 기기의 일반 OTA는 낮은 빌드로 내려가지 않습니다.</p>
+<div class="install"><esp-web-install-button id="rollback-ota26-installer" manifest="manifest-ota-2.6.json"><button slot="activate">app0 확인 · 이전 2.6 복원</button><span slot="unsupported">PC용 Chrome 또는 Edge가 필요합니다.</span></esp-web-install-button></div>
+<div class="install"><esp-web-install-button id="rollback-ota26-app1-installer" manifest="manifest-ota-2.6-app1.json"><button slot="activate">app1 확인 · 이전 2.6 복원</button><span slot="unsupported">PC용 Chrome 또는 Edge가 필요합니다.</span></esp-web-install-button></div>
+<p><a href="firmware/tamapoke-ko-cheonjiin-ota26-volume-96de76c318ae.bin" download>이전 2.6 앱 BIN 다운로드</a> · SHA256 <code class="hash">96de76c318ae3d7b5bce763899263ab9fc65e4ea0aadf452aa811a0da48da65b</code></p>
+</details>
+</section>
+
+<h2 class="legacy-heading">이전 배포판 ①~④</h2><p class="small">아래 네 가지 펌웨어는 기존 배포 파일을 동일한 SHA256으로 보존합니다. 새 시스템 절전 개선은 위 ⑤ 2.8에 적용됩니다. 이 설치 버튼은 기존과 같이 app0(0x10000) 전용입니다.</p>
 <div class="card">
 <h2>① 안정판</h2>
 <p class="small">지금까지 실기에서 확인한 CLEAN v1.2 기반 기본 배포판</p>
-<p class="ok">✓ 한글 14/18/22px UI 폰트</p><p class="ok">✓ 한글+숫자/영문 혼합 문자열 보정</p><p class="ok">✓ 하단 버튼 및 공놀이 터치 보정</p><p class="ok">✓ 공놀이/훈련 최고기록 한글 표시 수정</p>
+<p class="ok">✓ 한글 14/18/22px UI 폰트</p><p class="ok">✓ 한글+숫자/영문 혼합 문자열 보정</p><p class="ok">✓ 하단 버튼 및 공놀이 터치 보정</p><p class="ok">✓ 공놀이/훈련 최고기록 한글 표시 수정</p><p class="ok">✓ 메달 획득 한글 깨짐 수정 · 수면 Zzz 표시 깨짐 보정</p>
 <div class="warn"><b>중요:</b> 기존 포켓몬을 유지하려면 전체 Erase/초기화를 선택하지 마세요. 앱 영역 <code>0x10000</code>만 업데이트합니다.</div>
-<div class="install"><esp-web-install-button id="installer" manifest="manifest.json?v=stable-textfix2"><button slot="activate">⚡ 안정판 설치</button><span slot="unsupported">PC용 Chrome 또는 Edge가 필요합니다.</span><span slot="not-allowed">HTTPS 페이지에서 실행하세요.</span></esp-web-install-button></div>
+<div class="install"><esp-web-install-button id="installer" manifest="manifest.json?v=stability2"><button slot="activate">⚡ 안정판 설치</button><span slot="unsupported">PC용 Chrome 또는 Edge가 필요합니다.</span><span slot="not-allowed">HTTPS 페이지에서 실행하세요.</span></esp-web-install-button></div>
 </div>
 
 <div class="card testcard">
-<span class="testtag">🧪 TEST · ALARM v1.1</span>
-<h2>② 알람 테스트판</h2>
-<p>안정판에 알람 기능을 추가한 별도 시험용 펌웨어입니다.</p>
-<p class="ok">✓ 안정판의 한글/터치/기록 보정 포함</p><p class="ok">✓ 30초 미사용 시 시계 대기화면</p><p class="ok">✓ 날짜+한글 요일 표시 / 배터리 위치 보정</p><p class="ok">✓ 알람 ON/OFF 및 시·분 설정</p><p class="ok">✓ 정지 / 5분 스누즈 / PWR 짧게 눌러 정지</p><p class="ok">✓ 알람 설정값 NVS 저장</p>
-<div class="testwarn"><b>테스트판:</b> 컴파일 검증은 완료했지만 실제 기기 동작을 계속 확인 중입니다. <b>Erase/초기화는 선택하지 마세요.</b></div>
-<div class="install testinstall"><esp-web-install-button id="alarm-installer" manifest="manifest-alarm.json?v=alarm11"><button slot="activate">🧪 알람 v1.1 설치</button><span slot="unsupported">PC용 Chrome 또는 Edge가 필요합니다.</span><span slot="not-allowed">HTTPS 페이지에서 실행하세요.</span></esp-web-install-button></div>
+<span class="testtag">🕒 LIVING CLOCK · 1.9</span>
+<h2>② Living Clock 알람 1.9</h2>
+<p>안정판에 알람시계와 30초 대기 시계를 추가한 버전입니다.</p>
+<p class="ok">✓ 안정판의 한글/터치/기록 보정 포함</p><p class="ok">✓ 30초 미사용 시 시계 대기화면</p><p class="ok">✓ 날짜+한글 요일 표시 / 배터리 위치 보정</p><p class="ok">✓ 알람 ON/OFF 및 시·분 설정</p><p class="ok">✓ 정지 / 5분 스누즈 / PWR 짧게 눌러 정지</p><p class="ok">✓ 알람 설정값 NVS 저장</p><p class="ok">✓ 메달 획득 한글 깨짐 수정</p><p class="ok">✓ PWR 짧게: 게임 ↔ 시계 토글</p><p class="ok">✓ 30초 무조작 시 시계 · 수면 상태와 시계 화면 완전 분리</p><p class="ok">✓ 시계 배터리 표시 중앙 정렬 · 충전 중 CHG / USB 전원 표시</p><p class="ok">✓ 낮/밤 투톤 시계 디자인 · 날짜/요일/알람 표시 재배치</p><p class="ok">✓ 새벽·낮·노을·저녁·밤 5단계 자동 배경</p><p class="ok">✓ 포켓몬 좌우 산책·멈춤·수면 등 Living 행동</p><p class="ok">✓ 구름·별·별똥별·노을 파티클 등 가벼운 화면 연출</p><p class="ok">✓ 매 정각 4초 포켓몬 이벤트 + 짧은 효과음</p><p class="ok">✓ 알람 울림 중 밝은 WAKE UP / 일어날 시간 연출</p><p class="ok">✓ 알람·리빙클록 전용 1.9 보존판</p>
+<div class="testwarn"><b>안정화 2:</b> 수면 상태와 시계 화면을 분리했습니다. PWR 짧게 눌러 게임↔시계를 전환하고, 30초 무조작 시에도 시계로 들어갑니다. 시계에서 나와도 잠든 상태는 유지됩니다. <b>Erase/초기화는 선택하지 마세요.</b></div>
+<div class="install testinstall"><esp-web-install-button id="alarm-installer" manifest="manifest-alarm.json?v=livingclock19"><button slot="activate">🕒 Living Clock 1.9 설치</button><span slot="unsupported">PC용 Chrome 또는 Edge가 필요합니다.</span><span slot="not-allowed">HTTPS 페이지에서 실행하세요.</span></esp-web-install-button></div>
 </div>
 
 <div class="card combocard">
-<span class="combotag">🧪 NEW TEST · COMBO v1.0</span>
-<h2>③ 안정판 + 알람 + 한글 천지인</h2>
-<p>① 안정판의 수정사항과 ② 알람 v1.1을 합친 뒤, 이름변경에 <b>한글 천지인 조합 키보드</b>를 추가한 통합 시험판입니다.</p>
-<p class="ok">✓ `ㅣ · ㆍ · ㅡ` 천지인 모음 조합</p><p class="ok">✓ ㄱㅋ / ㄴㄹ / ㄷㅌ / ㅂㅍ / ㅅㅎ / ㅈㅊ / ㅇㅁ 자음 그룹</p><p class="ok">✓ 쌍자음, 종성 이동, 겹받침, 한글 한 글자 단위 삭제</p><p class="ok">✓ UTF-8 이름 저장 버퍼 확장 · 한글 최대 8글자</p><p class="ok">✓ 기존 ABC 이름 입력 모드 전환 유지</p><p class="ok">✓ 전체 현대 한글 음절 표시용 폴백 글꼴 포함</p><p class="ok">✓ 로컬 조합 테스트: `꼬뱀`, `지피티` 정상 생성 확인</p>
-<div class="combowarn"><b>통합 테스트판 주의:</b> GitHub ESP32 컴파일은 성공했습니다. 하지만 천지인 터치 위치·글꼴 크기·이름 저장 후 모든 화면 표시는 아직 실기 확인 전입니다. 문제가 있으면 ① 안정판으로 즉시 돌아갈 수 있습니다. <b>Erase/초기화는 선택하지 마세요.</b></div>
-<div class="install comboinstall"><esp-web-install-button id="combo-installer" manifest="manifest-combo.json?v=combo10"><button slot="activate">⌨️ 천지인 통합판 설치</button><span slot="unsupported">PC용 Chrome 또는 Edge가 필요합니다.</span><span slot="not-allowed">HTTPS 페이지에서 실행하세요.</span></esp-web-install-button></div>
+<span class="combotag">🔋 COMBO · BATTERY 2.3</span>
+<h2>③ 천지인 + 퀄업 미니게임 + 날짜 + 151퀴즈 한방판</h2>
+<p>천지인·알람·날짜·151퀴즈를 그대로 유지하면서 <b>포켓몬 테마 미니게임과 메인 상태창을 실기 화면 기준으로 마지막 다듬은 통합판</b>입니다.</p>
+<p class="ok">✓ `ㅣ · ㆍ · ㅡ` 천지인 모음 조합</p><p class="ok">✓ ㄱㅋ / ㄴㄹ / ㄷㅌ / ㅂㅍ / ㅅㅎ / ㅈㅊ / ㅇㅁ 자음 그룹</p><p class="ok">✓ 쌍자음, 종성 이동, 겹받침, 한글 한 글자 단위 삭제</p><p class="ok">✓ UTF-8 이름 저장 버퍼 확장 · 한글 최대 8글자</p><p class="ok">✓ 기존 ABC 이름 입력 모드 전환 유지</p><p class="ok">✓ 전체 현대 한글 음절 표시용 폴백 글꼴 포함</p><p class="ok">✓ 대기 시계 06:00~19:59: 해 표시 + 포켓몬 깨어서 좌우 걷기</p><p class="ok">✓ 대기 시계 20:00~05:59: 달 + 수면 + Zzz...</p><p class="ok">✓ PWR 짧게 게임↔시계 · 30초 자동 시계 · 수면 상태 유지</p><p class="ok">✓ 시계 배터리 표시 중앙 정렬 · 충전 중 CHG / USB 전원 표시</p><p class="ok">✓ 새 대기 시계 UI: 낮/밤 투톤 · 큰 시간 · 중앙 날짜/요일 · 알람 표시</p><p class="ok">✓ 공놀이 / 피카츄 잡기 / 가위바위보 / 151퀴즈 / 캐치 / 아케이드</p><p class="ok">✓ 피카츄 잡기 12칸·5단계 + 최고기록 저장</p><p class="ok">✓ 포켓몬 상대 5라운드 가위바위보 + 최고 승리 저장</p><p class="ok">✓ 미니게임 전용 오리지널 8비트 효과음 12종 · 알람 우선 재생</p><p class="ok">✓ 시간설정 안에서 년 / 월 / 일 직접 설정</p><p class="ok">✓ 대기 날짜·요일 / 설정 메뉴 / 상태바 / 게임 선택 한글 글씨 확대</p><p class="ok">✓ 천지인 키보드 좌표·키캡 크기는 기존 그대로 유지</p><p class="ok">✓ 새 게임: 1세대 151마리 그림 맞히기 · 3지선다</p><p class="ok">✓ Lv.1 준비 5초 · Lv.2~40 준비 3초</p><p class="ok">✓ Lv.41부터 2초 · Lv.101부터 1초 준비 카운트</p><p class="ok">✓ 매 문제 포켓몬 무작위 선택 · 직전 문제와 중복 방지</p><p class="ok">✓ 후반 레벨은 도감번호가 가까운 포켓몬을 오답으로 넣어 난이도 상승</p><p class="ok">✓ 151퀴즈: 정답 시 다음 레벨 · 오답 시 Lv.1부터 재시작 · 진행도 즉시 Lv.1 저장</p><p class="ok">✓ 가위바위보: 현재 키우는 포켓몬 VS 상대 포켓몬 대전형 UI</p><p class="ok">✓ 피카츄 잡기: 12칸 · 5단계 · 등장/타격/실패/단계업 효과음</p>
+    <p class="ok">✓ v2.1: 성공 타격음 강화 · 시계 포켓몬 배경박스 제거 · 151퀴즈 포켓몬 확대/매번 랜덤<br>✓ 기존 Battery 2.3: 밝기 25/50/75/100 저장 · 30초 감광 · 일반 대기 2분 밝기 0 · 수동 시계는 계속 표시</p>
+    <p class="ok">✓ v2.2: 테트리스 · 아보 지렁이 · 찌리리공 지뢰찾기 추가</p>
+    <p class="ok">✓ v2.2.2: 실기 UI 전면 수정 · 테트리스 보드/조작 개선 · 지렁이 충돌/장애물 수정 · 지뢰찾기 판/연쇄열기 수정</p>
+    <p class="ok">✓ v2.2.3: 한글 폰트 자동 크기/중앙정렬 보정 · 카드별 기준선 통일</p>
+    <p class="ok">✓ 3종 모두 스테이지 클리어마다 속도/목표/장애물/지뢰 수가 단계적으로 증가</p><p class="ok">✓ 메인 상태창: 행복/위생 게이지 길이를 먹이/체력과 균형 맞춤</p><p class="ok">✓ 151퀴즈: SD/이미지 미로드 시 ? + 안내문 · 정답 입력 차단</p><p class="ok">✓ 새 게임: 몬스터볼 캐치 · 볼/열매/사탕 점수 · 돌 피하기</p><p class="ok">✓ 몬스터볼 캐치 최고점 NVS 저장 · 현재 포켓몬으로 직접 캐치</p><p class="ok">✓ 메달 획득 한글 깨짐 및 수면 글씨 깨짐 보정</p><p class="ok">✓ 로컬 조합 테스트: `꼬뱀`, `지피티` 정상 생성 확인</p>
+<div class="combowarn"><b>2.2 ARCADE:</b> 두더지/피카츄 잡기 성공 타격음을 더 강한 뿅·톡 계열 3단 음으로 보강했습니다. 시계모드 포켓몬 뒤 큰 네모 박스를 제거했고, 151 이름맞추기는 포켓몬을 더 크게 표시하며 매 문제·오답 재시작마다 대상과 정답 위치를 새로 랜덤 선택합니다. <b>Erase/초기화는 선택하지 마세요.</b></div>
+<div class="install comboinstall"><esp-web-install-button id="combo-installer" manifest="manifest-combo.json?v=battery23"><button slot="activate">🎮 천지인 한방팩 v2.3 Battery 설치</button><span slot="unsupported">PC용 Chrome 또는 Edge가 필요합니다.</span><span slot="not-allowed">HTTPS 페이지에서 실행하세요.</span></esp-web-install-button></div>
 <p class="small">테스트할 이름 추천: <b>꼬뱀</b> → <b>지피티</b>. 이름변경 화면에서 한글/ABC 전환도 확인해 주세요.</p>
 </div>
 
-<div class="card"><h2>설치 순서</h2><div class="step">1. USB 데이터 케이블로 연결</div><div class="step">2. 원하는 ①/②/③ 설치 버튼 선택</div><div class="step">3. ESP32-S3 USB 포트 선택</div><div class="step">4. <b style="color:#ff4d4d;text-decoration:underline;text-decoration-thickness:3px;text-underline-offset:4px">ERASE/초기화는 절대 체크하지 않기</b> · 기존 데이터 유지</div><div class="step">5. 설치 완료 후 재부팅</div></div>
+
+<div class="card battlecard">
+<span class="battletag">⚔️ NEW · BATTLE 2.4</span>
+<h2>④ 천지인 한방팩 · Battery + 포켓몬 통신 배틀</h2>
+<p>③ Battery 2.3의 미니게임·밝기·절전 기능을 그대로 유지하고, <b>같은 ④ 펌웨어 기기 2대에서만 열리는 ESP-NOW 포켓몬 배틀</b>을 추가한 버전입니다.</p>
+<p class="ok">✓ 공유기/인터넷 없이 가까운 두 기기 자동 탐색</p><p class="ok">✓ 공격 · 방어 · 필살 동시 선택형 HP 배틀</p><p class="ok">✓ 승리 시 기존 육성 보상 즉시 적용 · 승/패 누적 저장</p><p class="ok">✓ 배틀에 들어갈 때만 Wi-Fi/ESP-NOW ON · 종료 시 OFF</p><p class="ok">✓ 기존 Battery 2.3 동작 유지 · 수동 시계의 자동 꺼짐 예외 있음</p>
+<div class="battlewarn"><b>통신 배틀:</b> 두 기기 모두 ④ Battle 2.4를 설치해야 합니다. 놀이 선택의 <b>통신 배틀</b>을 양쪽에서 실행하면 자동으로 서로를 찾습니다. <b>Erase/초기화는 선택하지 마세요.</b></div>
+<div class="install battleinstall"><esp-web-install-button id="battle-installer" manifest="manifest-battle.json?v=battle24"><button slot="activate">⚔️ 천지인 Battle 2.4 설치</button><span slot="unsupported">PC용 Chrome 또는 Edge가 필요합니다.</span><span slot="not-allowed">HTTPS 페이지에서 실행하세요.</span></esp-web-install-button></div>
+</div>
+
+
+<div class="card"><h2>설치 순서</h2><div class="step">1. USB 데이터 케이블로 연결</div><div class="step">2. 원하는 ①/②/③/④/⑤ 설치 버튼 선택</div><div class="step">3. ESP32-S3 USB 포트 선택</div><div class="step">4. <b style="color:#ff4d4d;text-decoration:underline;text-decoration-thickness:3px;text-underline-offset:4px">ERASE/초기화는 절대 체크하지 않기</b> · 기존 데이터 유지</div><div class="step">5. 설치 완료 후 재부팅</div></div>
 <div class="card"><h2>처음 조립한 새 기기</h2><p>이 페이지는 기존 TamaPoke 앱 업데이트용입니다. 완전 새 보드는 먼저 원작 TamaPoke의 부트로더/파티션과 필요한 microSD 데이터를 사용자가 적법한 출처와 조건에 따라 준비한 뒤 사용하세요.</p></div>
 
 <div class="card legalcard"><h2>⚖️ 라이선스 · 비영리 · 권리 안내</h2><p><b>소프트웨어 코드:</b> 이 한국어판은 <b>socquique / Quique Tortosa의 TamaPoke</b>를 기반으로 하며, 원작이 MIT License로 공개한 소스코드는 해당 MIT 조건에 따라 사용·수정·배포합니다.</p><p><b>Pokémon 관련 권리:</b> MIT License는 Pokémon 명칭, 캐릭터, 디자인, 로고, 상표, 음악, 이미지, 스프라이트 등 제3자 지식재산에 대한 사용 허가가 아닙니다.</p><p><b>비상업 운영:</b> 이 저장소와 설치 페이지는 무료·비상업적으로 운영하며 설치 대가, 유료 다운로드 또는 유료 접근을 요구하지 않습니다.</p><p><b>배포 범위:</b> Pokémon 게임 ROM/ISO, 게임기 BIOS 또는 microSD용 Pokémon 스프라이트 팩을 별도 다운로드 패키지로 제공하지 않습니다.</p><div class="legalnote"><b>고지의 한계</b><br>`비영리`, `팬 프로젝트` 등의 표현만으로 법적 책임이 자동 면제되는 것은 아닙니다. 권리자 또는 정당한 대리인의 구체적인 요청이 있는 경우 검토 후 필요한 조치를 검토합니다.</div><div class="links"><a class="linkbtn" href="https://github.com/py2jin-rgb/tamapoke-ko/blob/main/LICENSE" target="_blank" rel="noopener noreferrer">LICENSE ↗</a><a class="linkbtn" href="https://github.com/py2jin-rgb/tamapoke-ko/blob/main/LEGAL.md" target="_blank" rel="noopener noreferrer">상세 법적/운영 고지 ↗</a><a class="linkbtn" href="https://github.com/py2jin-rgb/tamapoke-ko/blob/main/THIRD_PARTY_NOTICES.md" target="_blank" rel="noopener noreferrer">제3자 출처/권리 ↗</a></div></div>

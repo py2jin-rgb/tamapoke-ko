@@ -2,230 +2,97 @@ name: Build firmware and deploy installer
 
 on:
   push:
+    branches: [main, 'battery-*']
+  pull_request:
     branches: [main]
   workflow_dispatch:
 
 permissions:
   contents: read
-  pages: write
-  id-token: write
 
 concurrency:
-  group: pages
+  group: firmware-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      pages: read
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Extract base source
-        run: |
-          rm -rf source source_alarm source_combo source_battle
-          mkdir -p source
-          unzip -q source_package.zip -d source
-          test -f source/TamaPoke/TamaPoke.ino
-
-      - name: Patch stable Korean renderers
-        run: |
-          python3 - <<'PY'
-          from pathlib import Path
-          import re
-          p=Path('source/TamaPoke/TamaPoke.ino')
-          s=p.read_text(encoding='utf-8')
-          pats=[
-            (r'gfx->setTextColor\(ink\);\s*gfx->setCursor\(CX - strlen\(rec\) \* 6, 214\);\s*gfx->print\(rec\);','uiPrintCenter(rec, 214, ink, 2);'),
-            (r'gfx->setTextSize\(2\);\s*gfx->setCursor\(CX - strlen\(rec\) \* 6, 76\);\s*gfx->print\(rec\);','uiPrintCenter(rec, 76, ink, 2);'),
-            (r'gfx->setTextColor\(ink\);\s*gfx->setCursor\(CX - strlen\(r\) \* 6, 256\);\s*gfx->print\(r\);','uiPrintCenter(r, 256, ink, 2);'),
-          ]
-          for pat,repl in pats:
-            s,n=re.subn(pat,repl,s,count=1)
-            if n!=1: raise SystemExit('stable renderer patch mismatch')
-          p.write_text(s,encoding='utf-8')
-          PY
-
-      - name: Prepare alarm source
-        run: |
-          mkdir -p source_alarm
-          cp -a source/TamaPoke source_alarm/TamaPoke
-          cat alarm_test/patch_01.b64 alarm_test/patch_02.b64 alarm_test/patch_03.b64 alarm_test/patch_04.b64 | tr -d '\r\n' | base64 -d | gzip -dc > /tmp/alarm.patch
-          cd source_alarm/TamaPoke
-          patch -p1 < /tmp/alarm.patch
-          cd ../..
-          python3 alarm_test/ui_fix_v11.py
-          test -f source_alarm/TamaPoke/alarm.cpp
-          grep -q '1.5-ko-alarm1.1' source_alarm/TamaPoke/TamaPoke.ino
-
-      - name: Prepare alarm plus Cheonjiin source
+      - name: Install Korean font generator dependencies
         run: |
           sudo apt-get update -qq
-          sudo apt-get install -y --no-install-recommends fonts-nanum python3-pil
-          mkdir -p source_combo
-          cp -a source_alarm/TamaPoke source_combo/TamaPoke
-          cp combo_test/hangul_cheonjiin.h source_combo/TamaPoke/hangul_cheonjiin.h
-          python3 combo_test/gen_hangul_font.py source_combo/TamaPoke/hangul_full16.h
-          cd source_combo/TamaPoke
-          patch -p1 < ../../combo_test/keyboard.patch
-          cd ../..
-          python3 combo_test/day_standby_v11.py
-          grep -q '1.6-ko-combo1.1' source_combo/TamaPoke/TamaPoke.ino
-          grep -q 'char nick\[40\]' source_combo/TamaPoke/pet.h
-          test -s source_combo/TamaPoke/hangul_full16.h
+          sudo apt-get install -y --no-install-recommends fonts-nanum=20200506-1 python3-pil
 
-      - name: Apply stability2 fixes
-        run: |
-          python3 stability_fix_v12.py source/TamaPoke source_alarm/TamaPoke source_combo/TamaPoke
-          grep -q 'stability2' source/TamaPoke/TamaPoke.ino
-          grep -q 'stability2' source_alarm/TamaPoke/TamaPoke.ino
-          grep -q 'stability2' source_combo/TamaPoke/TamaPoke.ino
-
-      - name: Add expandable games to combo only
-        run: |
-          python3 combo_test/minigames_v1.py source_combo/TamaPoke
-          grep -q '1.7-ko-combo-games1' source_combo/TamaPoke/TamaPoke.ino
-          grep -q 'void startMole()' source_combo/TamaPoke/TamaPoke.ino
-
-      - name: Add date setting and larger fonts to combo only
-        run: |
-          python3 combo_test/date_font_v2.py source_combo/TamaPoke
-          grep -q '1.8-ko-combo-games1-datefont' source_combo/TamaPoke/TamaPoke.ino
-
-      - name: Add 151-level picture quiz to combo only
-        run: |
-          python3 combo_test/quiz151_v1.py source_combo/TamaPoke
-          grep -q '1.9-ko-combo-quiz151' source_combo/TamaPoke/TamaPoke.ino
-
-      - name: Apply minigame quality upgrade to combo only
-        run: |
-          cat combo_test/quality_v20_01.b64 combo_test/quality_v20_02.b64 combo_test/quality_v20_03.b64 | tr -d '\r\n' | base64 -d | gzip -dc > /tmp/quality_v20.patch
-          cd source_combo/TamaPoke
-          patch -p1 < /tmp/quality_v20.patch
-          cd ../..
-          grep -q '2.0-ko-combo-qualitygames' source_combo/TamaPoke/TamaPoke.ino
-          grep -q 'void startMonsterCatch()' source_combo/TamaPoke/TamaPoke.ino
-
-      - name: Enlarge 151 quiz Pokemon artwork
-        run: |
-          python3 combo_test/quiz151_big_v24.py source_combo/TamaPoke
-          grep -q 'PMD_IDLE, CX, 302, now, true, false, 5' source_combo/TamaPoke/TamaPoke.ino
-
-      - name: Install Arduino CLI
+      - name: Install pinned Arduino CLI
         uses: arduino/setup-arduino-cli@v2
         with:
-          version: "1.x"
+          version: '1.3.1'
 
-      - name: Configure ESP32
+      - name: Cache the pinned ESP32 toolchain
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.arduino15
+            ~/Arduino/libraries
+          key: arduino-linux-cli131-esp32310-gfx167-sensor031-xpowers026-v1
+
+      - name: Configure pinned core and libraries
         run: |
           arduino-cli config init --overwrite
           arduino-cli config add board_manager.additional_urls https://espressif.github.io/arduino-esp32/package_esp32_index.json
           arduino-cli core update-index
           arduino-cli core install esp32:esp32@3.1.0
           arduino-cli lib update-index
-          arduino-cli lib install "GFX Library for Arduino@1.6.7"
-          arduino-cli lib install "SensorLib@0.3.1"
-          arduino-cli lib install "XPowersLib@0.2.6"
+          arduino-cli lib install 'GFX Library for Arduino@1.6.7'
+          arduino-cli lib install 'SensorLib@0.3.1'
+          arduino-cli lib install 'XPowersLib@0.2.6'
 
-      - name: Compile basic firmware
+      - name: Verify power decisions and source contracts
         run: |
-          rm -rf build_stable && mkdir build_stable
-          arduino-cli compile --fqbn "esp32:esp32:esp32s3:CDCOnBoot=cdc,FlashSize=16M,PSRAM=opi,PartitionScheme=app3M_fat9M_16MB" --build-path build_stable source/TamaPoke
+          mkdir -p .build/tests
+          g++ -std=c++17 -Wall -Wextra -pedantic tests/test_power_policy.cpp -o .build/tests/test_power_policy
+          .build/tests/test_power_policy
+          python3 -m unittest discover -s tests -p 'test_*.py' -v
+          python3 tests/audio/run.py
+          python3 -m unittest discover -s tools -p 'test_*.py' -v
 
-      - name: Compile alarm firmware
-        run: |
-          rm -rf build_alarm && mkdir build_alarm
-          arduino-cli compile --fqbn "esp32:esp32:esp32s3:CDCOnBoot=cdc,FlashSize=16M,PSRAM=opi,PartitionScheme=app3M_fat9M_16MB" --build-path build_alarm source_alarm/TamaPoke
+      - name: Compile canonical edition 5 once
+        run: python3 tools/build_release.py
 
-      - name: Compile combo base firmware
-        run: |
-          rm -rf build_combo && mkdir build_combo
-          arduino-cli compile --fqbn "esp32:esp32:esp32s3:CDCOnBoot=cdc,FlashSize=16M,PSRAM=opi,PartitionScheme=app3M_fat9M_16MB" --build-path build_combo source_combo/TamaPoke
+      - name: Package edition 5 and preserve exact previous firmware
+        run: python3 tools/package_release.py
 
-      - name: Prepare web installers, combo Battery Edition, Battle Edition, and Living Clock
-        run: |
-          set -e
-          rm -rf site
-          mkdir -p site/firmware
-          cp docs/index.html site/index.html
-          python3 combo_test/page_v11.py
-          python3 combo_test/page_quiz151.py
-          python3 combo_test/page_quality_v20.py
-          python3 combo_test/page_userfix_v21.py
-          sed -i 's/static volatile BattlePacket battleRx;/static BattlePacket battleRx;/' combo_test/battle_v24.py
-          grep -q 'static BattlePacket battleRx;' combo_test/battle_v24.py
-          python3 combo_test/battle_v24.py
-          python3 alarm_test/living_clock_v23.py
-          python3 alarm_test/living_clock_finish_v24.py
-          python3 alarm_test/living_clock_final_v25.py
-          grep -q '2.3-ko-combo-battery' source_combo/TamaPoke/TamaPoke.ino
-          grep -q '2.4-ko-combo-battle' source_battle/TamaPoke/TamaPoke.ino
-          grep -q 'esp_now_init' source_battle/TamaPoke/TamaPoke.ino
-          grep -q 'powerBrightnessPct' source_combo/TamaPoke/TamaPoke.ino
-          grep -q 'setCpuFrequencyMhz(80)' source_combo/TamaPoke/TamaPoke.ino
-          grep -q 'PMD_IDLE, CX, 302, now, true, false, 5' source_combo/TamaPoke/TamaPoke.ino
-          grep -q 'arcRenderTetris' source_combo/TamaPoke/TamaPoke.ino
-          grep -q 'arcRenderSnake' source_combo/TamaPoke/TamaPoke.ino
-          grep -q 'arcRenderMine' source_combo/TamaPoke/TamaPoke.ino
-          grep -q '1.9-ko-livingclock-final' source_alarm/TamaPoke/TamaPoke.ino
-          grep -q 'livingPartOfDay' source_alarm/TamaPoke/TamaPoke.ino
-          if grep -q 'fillRoundRect(300, 307, 74, 31' source_alarm/TamaPoke/TamaPoke.ino; then echo 'residual white idle rectangle unexpectedly present'; exit 1; fi
-          test -f build_combo/TamaPoke.ino.bin
-          test -f build_battle/TamaPoke.ino.bin
-          test -f build_alarm/TamaPoke.ino.bin
-          touch site/.nojekyll
+      - name: Validate firmware, OTA metadata, installers and retained binaries
+        run: python3 tools/validate_release.py site --expected-commit "$GITHUB_SHA"
 
-          STABLE=build_stable/TamaPoke.ino.bin
-          SSHA=$(sha256sum "$STABLE" | awk '{print $1}')
-          SSHORT=${SSHA:0:12}
-          SFW=tamapoke-ko-basic-stability2-${SSHORT}.bin
-          cp "$STABLE" "site/firmware/$SFW"
-          cat > site/manifest.json <<EOF
-          {"name":"TamaPoke KO Basic","version":"1.4-ko-stability2-${SSHORT}","new_install_prompt_erase":true,"builds":[{"chipFamily":"ESP32-S3","parts":[{"path":"firmware/$SFW","offset":65536}]}]}
-          EOF
-
-          ALARM=build_alarm/TamaPoke.ino.bin
-          ASHA=$(sha256sum "$ALARM" | awk '{print $1}')
-          ASHORT=${ASHA:0:12}
-          AFW=tamapoke-ko-alarm-livingclock-final19-${ASHORT}.bin
-          cp "$ALARM" "site/firmware/$AFW"
-          cat > site/manifest-alarm.json <<EOF
-          {"name":"TamaPoke KO Living Clock Final 1.9","version":"1.9-ko-livingclock-final-${ASHORT}","new_install_prompt_erase":true,"builds":[{"chipFamily":"ESP32-S3","parts":[{"path":"firmware/$AFW","offset":65536}]}]}
-          EOF
-
-          COMBO=build_combo/TamaPoke.ino.bin
-          CSHA=$(sha256sum "$COMBO" | awk '{print $1}')
-          CSHORT=${CSHA:0:12}
-          CFW=tamapoke-ko-cheonjiin-battery23-${CSHORT}.bin
-          cp "$COMBO" "site/firmware/$CFW"
-          cat > site/manifest-combo.json <<EOF
-          {"name":"TamaPoke KO Cheonjiin Battery 2.3","version":"2.3-ko-combo-battery-${CSHORT}","new_install_prompt_erase":true,"builds":[{"chipFamily":"ESP32-S3","parts":[{"path":"firmware/$CFW","offset":65536}]}]}
-          EOF
-
-          BATTLE=build_battle/TamaPoke.ino.bin
-          BSHA=$(sha256sum "$BATTLE" | awk '{print $1}')
-          BSHORT=${BSHA:0:12}
-          BFW=tamapoke-ko-cheonjiin-battle24-${BSHORT}.bin
-          cp "$BATTLE" "site/firmware/$BFW"
-          cat > site/manifest-battle.json <<EOF
-          {"name":"TamaPoke KO Cheonjiin Battle 2.4","version":"2.4-ko-combo-battle-${BSHORT}","new_install_prompt_erase":true,"builds":[{"chipFamily":"ESP32-S3","parts":[{"path":"firmware/$BFW","offset":65536}]}]}
-          EOF
-
-          printf 'Basic SHA256: %s\nLiving Clock Final 1.9 SHA256: %s\nCombo Battery 2.3 SHA256: %s\nBattle 2.4 SHA256: %s\nFlash offset: 0x10000\nCombo Battery 2.3: 151 quiz extra-large 5x Pokemon artwork; 25/50/75/100 brightness saved in NVS, 30s auto dim, 120s AMOLED off, CPU 80MHz at black, touch/PWR/alarm logic kept alive.\nBattle 2.4: Battery 2.3 base plus two-device ESP-NOW battle, attack/guard/special HP combat, win/loss persistence, radio on only while battle modal is open.\n' "$SSHA" "$ASHA" "$CSHA" "$BSHA" > site/build-info.txt
-
-      - name: Configure Pages
-        uses: actions/configure-pages@v5
+      - name: Keep the reviewed release artifact
+        uses: actions/upload-artifact@v4
         with:
-          enablement: true
+          name: tamapoke-release-${{ github.sha }}
+          path: site
+          include-hidden-files: true
+          retention-days: 30
 
-      - name: Upload Pages artifact
+      - name: Configure Pages for main only
+        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        uses: actions/configure-pages@v5
+
+      - name: Upload Pages artifact for main only
+        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
         uses: actions/upload-pages-artifact@v3
         with:
           path: site
 
   deploy:
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
     needs: build
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
@@ -233,6 +100,6 @@ jobs:
       pages: write
       id-token: write
     steps:
-      - name: Deploy GitHub Pages
+      - name: Deploy the validated artifact
         id: deployment
         uses: actions/deploy-pages@v4

@@ -1,0 +1,59 @@
+{
+  "schema_version": 1,
+  "source_commit": "ff17be49396971d752b2061fe4997adf9a2f5cd8",
+  "source_run_id": 33942207403,
+  "source_run_number": 141,
+  "note": "All five published binaries were downloaded and SHA256-verified before locking. Keep these exact paths in every future Pages artifact. Missing or mismatched bytes must stop the build.",
+  "releases": [
+    {
+      "id": "basic",
+      "name": "TamaPoke KO Basic",
+      "version": "1.4-ko-stability2-0b834b70dac0",
+      "manifest": "manifest.json",
+      "firmware_path": "firmware/tamapoke-ko-basic-stability2-0b834b70dac0.bin",
+      "url": "https://py2jin-rgb.github.io/tamapoke-ko/firmware/tamapoke-ko-basic-stability2-0b834b70dac0.bin",
+      "size": 746560,
+      "sha256": "0b834b70dac0b9a8e4cb3d6ee1f02c07f4359dce3469527d36dcf62423d89ba4"
+    },
+    {
+      "id": "alarm",
+      "name": "TamaPoke KO Living Clock Final 1.9",
+      "version": "1.9-ko-livingclock-final-1935020ba48f",
+      "manifest": "manifest-alarm.json",
+      "firmware_path": "firmware/tamapoke-ko-alarm-livingclock-final19-1935020ba48f.bin",
+      "url": "https://py2jin-rgb.github.io/tamapoke-ko/firmware/tamapoke-ko-alarm-livingclock-final19-1935020ba48f.bin",
+      "size": 759936,
+      "sha256": "1935020ba48f53a908367b0b62412a58d62e97e882ff6bc4e9cbf1fb89a0578b"
+    },
+    {
+      "id": "combo",
+      "name": "TamaPoke KO Cheonjiin Battery 2.3",
+      "version": "2.3-ko-combo-battery-8ace619cab38",
+      "manifest": "manifest-combo.json",
+      "firmware_path": "firmware/tamapoke-ko-cheonjiin-battery23-8ace619cab38.bin",
+      "url": "https://py2jin-rgb.github.io/tamapoke-ko/firmware/tamapoke-ko-cheonjiin-battery23-8ace619cab38.bin",
+      "size": 1145088,
+      "sha256": "8ace619cab3851da1c4b0deffb04c4832e8279997e25f46c98432c5caaf9ca1c"
+    },
+    {
+      "id": "battle",
+      "name": "TamaPoke KO Cheonjiin Battle 2.4",
+      "version": "2.4-ko-combo-battle-84dac9a2092a",
+      "manifest": "manifest-battle.json",
+      "firmware_path": "firmware/tamapoke-ko-cheonjiin-battle24-84dac9a2092a.bin",
+      "url": "https://py2jin-rgb.github.io/tamapoke-ko/firmware/tamapoke-ko-cheonjiin-battle24-84dac9a2092a.bin",
+      "size": 1694656,
+      "sha256": "84dac9a2092a50e9374a778da81e8f2e5caaeba5199c4073aad198cfa55fdbd5"
+    },
+    {
+      "id": "ota26",
+      "name": "TamaPoke KO Cheonjiin OTA Volume 2.6 (previous)",
+      "version": "2.6-ko-combo-ota-volume-96de76c318ae",
+      "manifest": "manifest-ota-2.6.json",
+      "firmware_path": "firmware/tamapoke-ko-cheonjiin-ota26-volume-96de76c318ae.bin",
+      "url": "https://py2jin-rgb.github.io/tamapoke-ko/firmware/tamapoke-ko-cheonjiin-ota26-volume-96de76c318ae.bin",
+      "size": 1848896,
+      "sha256": "96de76c318ae3d7b5bce763899263ab9fc65e4ea0aadf452aa811a0da48da65b"
+    }
+  ]
+}
