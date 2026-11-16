@@ -57,13 +57,21 @@ def validate(site, expected_commit=None):
     version = release['firmware_version'] + '-' + release['sha256'][:12]
     expected.update({'manifest-ota.json': (release['firmware_path'], config['app0_offset'], version),
                      'manifest-ota-app1.json': (release['firmware_path'], config['app1_offset'], version),
+                     'manifest-ota-usb.json': (release['firmware_path'], config['app0_offset'], version),
                      'manifest-ota-2.6-app1.json': (old['firmware_path'], config['app1_offset'], old['version'])})
     for name, (path, offset, ver) in expected.items():
         manifest = read_json(site / name)
         require(manifest.get('new_install_prompt_erase') is True, f'{name}: erase prompt must remain enabled')
         require(manifest['version'] == ver, f'{name}: version mismatch')
-        require(manifest['builds'] == [{'chipFamily': config['chip_family'], 'parts': [{'path': path, 'offset': offset}]}], f'{name}: unsafe or mismatched flash map')
-        if name in ('manifest-ota.json', 'manifest-ota-app1.json'):
+        parts = [{'path': path, 'offset': offset}]
+        if name == 'manifest-ota-usb.json':
+            require(config['app1_offset'] - config['app0_offset'] == config['app_slot_size'],
+                    'Dual-slot USB partition layout mismatch')
+            require(release['size'] <= config['app_slot_size'], 'Dual-slot USB image overlaps app partitions')
+            parts.append({'path': path, 'offset': config['app1_offset']})
+        require(manifest['builds'] == [{'chipFamily': config['chip_family'], 'parts': parts}],
+                f'{name}: unsafe or mismatched flash map')
+        if name in ('manifest-ota.json', 'manifest-ota-app1.json', 'manifest-ota-usb.json'):
             for key in ('sha256', 'size', 'source_commit', 'build'):
                 require(manifest[key] == release[key], f'{name}: {key} mismatch')
     html = (site / 'index.html').read_text(encoding='utf-8')
