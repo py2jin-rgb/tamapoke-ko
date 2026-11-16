@@ -3,7 +3,7 @@ from pathlib import Path
 import tempfile
 import unittest
 
-from package_release import check_bytes, digest, install_manifest, safe_path
+from package_release import check_bytes, digest, install_manifest, install_dual_slot_manifest, safe_path
 
 
 class ReleaseIntegrityTests(unittest.TestCase):
@@ -28,6 +28,19 @@ class ReleaseIntegrityTests(unittest.TestCase):
             m = install_manifest('Fixture', '2.8', 'firmware/fixture.bin', offset)
             self.assertIs(m['new_install_prompt_erase'], True)
             self.assertEqual(m['builds'], [{'chipFamily': 'ESP32-S3', 'parts': [{'path': 'firmware/fixture.bin', 'offset': offset}]}])
+
+    def test_dual_slot_usb_writes_same_app_and_keeps_erase_prompt(self):
+        m = install_dual_slot_manifest('Fixture USB', '2.8', 'firmware/fixture.bin',
+                                       0x10000, 0x310000,
+                                       {'sha256': self.entry['sha256'], 'size': self.entry['size']})
+        self.assertIs(m['new_install_prompt_erase'], True)
+        self.assertEqual(m['builds'], [{'chipFamily': 'ESP32-S3', 'parts': [
+            {'path': 'firmware/fixture.bin', 'offset': 0x10000},
+            {'path': 'firmware/fixture.bin', 'offset': 0x310000}
+        ]}])
+        self.assertEqual(m['sha256'], self.entry['sha256'])
+        with self.assertRaisesRegex(ValueError, 'Invalid OTA'):
+            install_dual_slot_manifest('Fixture', '2.8', 'firmware/fixture.bin', 0x310000, 0x10000)
 
     def test_path_escape_is_rejected(self):
         with tempfile.TemporaryDirectory() as d:
